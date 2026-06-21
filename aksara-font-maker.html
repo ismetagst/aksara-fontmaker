@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Aksara — Make Your Own Font</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/0.6.5/opentype.min.js"></script>
+<style>
+  :root{
+    --bg: #ffffff;
+    --ink: #16140F;
+    --muted: #948C7C;
+    --line: #DDD8CC;
+    --line-soft: #EAE6DB;
+    --guide-blue: #4A63C9;
+    --guide-red: #C0392B;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); }
+  body{
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  a, span, button, input { font-family: inherit; color: inherit; }
+  .app{ max-width: 1120px; margin: 0 auto; padding: 28px 20px 0; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end;
+    gap: 18px 28px; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 32px;
+  }
+  .brand .eyebrow-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .brand .eyebrow-row .rule{ width:22px; height:2px; background: var(--guide-red); display:inline-block; }
+  .brand .eyebrow{ letter-spacing:.16em; font-size:10.5px; color:var(--muted); }
+  .brand h1{ font-family: Georgia, 'Times New Roman', serif; font-weight:400; font-size:38px; margin:0; letter-spacing:.005em; }
+  .brand p{ margin: 8px 0 0; color: var(--muted); font-size: 11.5px; max-width: 460px; }
+  .meta-controls{ display:flex; align-items:flex-end; gap:22px; flex-wrap:wrap; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:10px; letter-spacing:.1em; color:var(--muted); }
+  .field input[type=text]{
+    border:none; border-bottom:1px solid var(--line); background:none; padding:3px 0;
+    font-size:13px; color:var(--ink); width: 170px; outline:none;
+  }
+  .field input[type=text]:focus{ border-bottom-color: var(--ink); }
+  .progress{ font-size:11px; color: var(--muted); white-space:nowrap; }
+  .progress b{ color: var(--ink); font-weight: normal; }
+  button.cta{
+    background: var(--ink); color: var(--bg); border:none; border-radius:0;
+    padding: 10px 18px; font-size: 12px; letter-spacing:.04em; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  button.cta svg{ width:14px; height:14px; stroke: var(--bg); flex-shrink:0; }
+  button.cta:hover{ opacity:.85; }
+  button.cta:disabled{ opacity:.4; cursor:default; }
+  button.cta:focus-visible{ outline: 2px dotted var(--ink); outline-offset: 3px; }
+  .status-line{ font-size:10.5px; color: var(--muted); min-height: 14px; margin-top:6px; text-align:right; }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid; grid-template-columns: 260px 1fr; gap: 40px 44px;
+    grid-template-areas: "chars editor" "chars preview";
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; grid-template-areas: "editor" "chars" "preview"; gap: 36px; }
+  }
+
+  /* ---------- Character grid ---------- */
+  .charpanel{ grid-area: chars; }
+  .charpanel h2{ font-size:10.5px; letter-spacing:.12em; color:var(--muted); font-weight:normal; margin: 0 0 10px; }
+  .chargroup{ margin-bottom: 22px; }
+  .chargroup-label{ display:block; font-size:9.5px; letter-spacing:.14em; color:var(--muted); margin-bottom:8px; }
+  .chargrid{ display:flex; flex-wrap:wrap; gap: 2px 3px; }
+  .charcell{
+    width: 28px; height: 30px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:15px; opacity:.32; text-decoration:none; user-select:none;
+    border-bottom: 1px solid transparent;
+  }
+  .charcell.drawn{ opacity:1; }
+  .charcell:hover{ opacity:.6; text-decoration:underline; }
+  .charcell.active{ text-decoration:underline; opacity:1; border-bottom-color: var(--guide-red); }
+  .charcell:focus-visible{ outline: 1px dotted var(--ink); outline-offset:1px; }
+
+  /* ---------- Editor ---------- */
+  .editorpanel{ grid-area: editor; }
+  .editor-toolbar{
+    display:flex; flex-wrap:wrap; align-items:center; gap: 18px 26px;
+    margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line-soft);
+  }
+  .editor-toolbar.secondary{ margin-top:-6px; }
+  .char-nav{ display:flex; align-items:center; gap:8px; }
+  .current-char{ font-family: Georgia, 'Times New Roman', serif; font-size: 26px; min-width: 28px; text-align:center; }
+  .tool-group{ display:flex; align-items:center; gap:4px; }
+  .tool-label{ font-size:9.5px; letter-spacing:.1em; color:var(--muted); margin-right:4px; }
+
+  .icon-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width: 30px; height: 26px; opacity:.5; cursor:pointer;
+    border-bottom: 1.5px solid transparent;
+  }
+  .icon-btn svg{ width:17px; height:17px; display:block; }
+  .icon-btn:hover{ opacity:.85; }
+  .icon-btn.active{ opacity:1; border-bottom-color: var(--ink); }
+  .icon-btn.disabled{ opacity:.18; pointer-events:none; }
+  .icon-btn:focus-visible{ outline: 1px dotted var(--ink); outline-offset:2px; }
+
+  .width-group input[type=number]{
+    border:none; border-bottom:1px solid var(--line); background:none; width:50px;
+    font-size:12px; color:var(--ink); outline:none; padding:2px 0;
+  }
+  .width-group input:focus{ border-bottom-color: var(--ink); }
+  input[type=range]{ width:84px; accent-color: var(--ink); }
+
+  .canvas-wrap{
+    position:relative; width: min(440px, 100%); aspect-ratio: 1/1;
+    border: 1px solid var(--line); background: #fff;
+    touch-action: none;
+  }
+  .canvas-wrap canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #inkCanvas{ cursor: crosshair; }
+  .canvas-note{ font-size: 10.5px; color: var(--muted); margin-top: 10px; max-width: 460px; min-height: 28px; }
+  .canvas-note.active-hint{ color: var(--guide-blue); }
+  .layers-panel{ border:1px solid var(--line); padding:10px 14px; margin-top:10px; max-width:min(440px,100%); }
+  .layers-panel-title{ font-size:9.5px; letter-spacing:.14em; color:var(--muted); margin-bottom:8px; display:block; }
+  .layer-row{ display:flex; align-items:center; gap:8px; padding:5px 0; }
+  .layer-row + .layer-row{ border-top:1px solid var(--line-soft); }
+  .layer-dot{ width:8px; height:8px; border-radius:50%; background:var(--ink); flex-shrink:0; }
+  .layer-dot.ref{ background:var(--guide-blue); }
+  .layer-name{ flex:1; font-size:12px; }
+  .layer-row.hidden-layer .layer-name{ opacity:.35; }
+  .layer-row.locked-layer .layer-name{ opacity:.6; }
+  .layer-actions{ display:flex; gap:2px; margin-left:auto; }
+  .layer-actions .icon-btn{ width:24px; height:22px; }
+  .layer-actions .icon-btn svg{ width:14px; height:14px; }
+
+  /* ---------- Preview ---------- */
+  .previewpanel{ grid-area: preview; margin-top: 6px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .previewpanel h2{ font-size:10.5px; letter-spacing:.12em; color:var(--muted); font-weight:normal; margin: 0 0 12px; }
+  .preview-input{
+    width:100%; border:none; border-bottom:1px solid var(--line); background:none;
+    font-size:13px; padding: 6px 0; outline:none; color:var(--ink); margin-bottom: 20px;
+  }
+  .preview-input:focus{ border-bottom-color: var(--ink); }
+  .preview-card{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding: 26px 0; }
+  .preview-output{
+    font-size: 62px; line-height:1.25; word-break: break-word; min-height: 1.4em;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  footer.sitefoot{ margin-top: 56px; border-top:1px solid var(--line); padding: 16px 0 22px; }
+  footer.sitefoot .note{ font-size: 10.5px; color: var(--muted); max-width: 720px; }
+  footer.sitefoot .credit{ font-size: 10px; color: var(--muted); letter-spacing:.06em; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="eyebrow-row"><span class="rule"></span><span class="eyebrow">FONT MAKER</span></div>
+      <h1>Aksara</h1>
+      <p>Draw freehand, or trace from a scanned photo with the pen tool — then download a real, installable .otf font.</p>
+    </div>
+    <div class="meta-controls">
+      <div class="field">
+        <label for="fontNameInput">FONT NAME</label>
+        <input type="text" id="fontNameInput" value="My Font" maxlength="40">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <span class="progress" id="progressLabel">0/62 drawn</span>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="cta" id="downloadBtn">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9"/><path d="M6 8.5L10 12.5L14 8.5"/><path d="M4 15.5h12"/></svg>
+          <span>Download Font (.otf)</span>
+        </button>
+        <div class="status-line" id="statusLine"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <aside class="charpanel">
+      <h2>LETTERS</h2>
+      <div id="charGroups"></div>
+    </aside>
+
+    <section class="editorpanel">
+      <div class="editor-toolbar">
+        <div class="char-nav">
+          <span class="icon-btn" id="prevBtn" aria-label="Previous letter" title="Previous letter">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5L6.5 10l6 5.5"/></svg>
+          </span>
+          <span class="current-char" id="currentCharLabel">0</span>
+          <span class="icon-btn" id="nextBtn" aria-label="Next letter" title="Next letter">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5L13.5 10l-6 5.5"/></svg>
+          </span>
+        </div>
+
+        <div class="tool-group" id="modeGroup">
+          <span class="tool-label">TOOL</span>
+          <span class="icon-btn active" data-mode="move" title="Move / Transform (V)" aria-label="Move tool">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3l10 6.5-5 1.5-2.5 5L4 3z" fill="currentColor"/></svg>
+          </span>
+          <span class="icon-btn" data-mode="select" title="Direct Select / Anchor Edit (A)" aria-label="Direct select tool">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3l10 6.5-5 1.5-2.5 5L4 3z"/></svg>
+          </span>
+          <span class="icon-btn" data-mode="freehand" title="Freehand (B)" aria-label="Freehand tool">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l1.5-4.5L13 4l3 3-8.5 8.5L3 17z"/><path d="M11.5 5.5l3 3"/></svg>
+          </span>
+          <span class="icon-btn" data-mode="pen" title="Pen tool (P)" aria-label="Pen tool">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15C5 8 10 4 17 4"/><rect x="1.5" y="13.5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="15.5" y="2.5" width="3" height="3" fill="currentColor" stroke="none"/><circle cx="11" cy="7.3" r="1.2" fill="currentColor" stroke="none"/></svg>
+          </span>
+        </div>
+
+        <div class="tool-group" id="weightGroup">
+          <span class="tool-label">WEIGHT</span>
+          <span class="icon-btn" data-weight="thin" title="Thin">
+            <svg viewBox="0 0 20 20"><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </span>
+          <span class="icon-btn active" data-weight="regular" title="Regular">
+            <svg viewBox="0 0 20 20"><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>
+          </span>
+          <span class="icon-btn" data-weight="bold" title="Bold">
+            <svg viewBox="0 0 20 20"><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>
+          </span>
+        </div>
+
+        <div class="tool-group" id="penActionsGroup" style="display:none">
+          <span class="icon-btn disabled" id="closePathBtn" title="Close path" aria-label="Close path">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M7 10l2 2 4-4.5"/></svg>
+          </span>
+          <span class="icon-btn disabled" id="cancelPathBtn" title="Cancel path" aria-label="Cancel path">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M7.5 7.5l5 5M12.5 7.5l-5 5"/></svg>
+          </span>
+        </div>
+
+        <div class="tool-group width-group">
+          <label for="widthInput" class="tool-label">WIDTH</label>
+          <input type="number" id="widthInput" min="150" max="900" step="10">
+        </div>
+
+        <div class="tool-group">
+          <span class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8H13a4 4 0 110 8H8"/><path d="M5 8l3.5-3.5M5 8l3.5 3.5"/></svg>
+          </span>
+          <span class="icon-btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 8H7a4 4 0 100 8h5"/><path d="M15 8l-3.5-3.5M15 8l-3.5 3.5"/></svg>
+          </span>
+          <span class="icon-btn" id="clearBtn" title="Clear letter" aria-label="Clear letter">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12"/><path d="M7 6V4.5A1 1 0 018 3.5h4a1 1 0 011 1V6"/><path d="M5.5 6l.7 9.5a1 1 0 001 .9h5.6a1 1 0 001-.9L14.5 6"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="editor-toolbar secondary">
+        <div class="tool-group">
+          <span class="tool-label">REFERENCE</span>
+          <span class="icon-btn" id="uploadRefBtn" title="Upload image" aria-label="Upload reference image">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13V4"/><path d="M6.5 7.5L10 4l3.5 3.5"/><path d="M4 14v1.5a1 1 0 001 1h10a1 1 0 001-1V14"/></svg>
+          </span>
+          <input type="file" id="refFileInput" accept="image/*" style="display:none">
+        </div>
+        <div class="tool-group" id="refControls" style="display:none">
+          <span class="icon-btn" id="toggleRefBtn" title="Show" aria-label="Show reference">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/></svg>
+          </span>
+          <span class="icon-btn" id="lockRefBtn" title="Lock layer (prevents accidental movement)" aria-label="Lock reference image">
+            <svg id="lockRefIcon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="10" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 016 0V9"/></svg>
+          </span>
+          <span class="icon-btn" id="fitRefBtn" title="Fit to guides" aria-label="Fit image to guides">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H4a1 1 0 00-1 1v3"/><path d="M13 3h3a1 1 0 011 1v3"/><path d="M7 17H4a1 1 0 01-1-1v-3"/><path d="M13 17h3a1 1 0 001-1v-3"/></svg>
+          </span>
+          <span class="tool-label">OPACITY</span>
+          <input type="range" id="refOpacity" min="10" max="90" value="40">
+          <span class="icon-btn" id="removeRefBtn" title="Remove image" aria-label="Remove reference image">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12"/><path d="M7 6V4.5A1 1 0 018 3.5h4a1 1 0 011 1V6"/><path d="M5.5 6l.7 9.5a1 1 0 001 .9h5.6a1 1 0 001-.9L14.5 6"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="guidesCanvas"></canvas>
+        <canvas id="refCanvas"></canvas>
+        <canvas id="inkCanvas"></canvas>
+      </div>
+      <p class="canvas-note" id="canvasNote">V = move · A = anchor edit · P = pen · B = freehand · Shift+resize = lock ratio · Alt+handle = break mirror</p>
+      <div class="layers-panel">
+        <span class="layers-panel-title">LAYERS</span>
+        <div class="layer-row" id="layerDrawingRow">
+          <span class="layer-dot"></span>
+          <span class="layer-name">Drawing</span>
+          <div class="layer-actions">
+            <span class="icon-btn active" id="drawingVisBtn" title="Toggle drawing visibility" aria-label="Toggle drawing visibility">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/></svg>
+            </span>
+            <span class="icon-btn" id="drawingLockBtn" title="Lock drawing layer" aria-label="Lock drawing layer">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="10" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 016 0" /></svg>
+            </span>
+          </div>
+        </div>
+        <div class="layer-row" id="layerRefRow" style="opacity:.35">
+          <span class="layer-dot ref"></span>
+          <span class="layer-name">Reference</span>
+          <div class="layer-actions">
+            <span class="icon-btn" id="refLayerVisBtn" title="Toggle reference visibility" aria-label="Toggle reference visibility">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/></svg>
+            </span>
+            <span class="icon-btn" id="refLayerLockBtn" title="Lock reference layer" aria-label="Lock reference layer">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="10" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 016 0" /></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="previewpanel">
+      <h2>PREVIEW</h2>
+      <input type="text" class="preview-input" id="previewInput" placeholder="Type to preview your font…">
+      <div class="preview-card"><div class="preview-output" id="previewOutput">Aa Bb Cc 0123</div></div>
+    </section>
+
+  </div>
+
+  <footer class="sitefoot">
+    <p class="note">62 characters (0–9, A–Z, a–z). Undrawn characters export as blank spaces. While drawing, overlapping pen and freehand shapes are shown simply — the true composited result, including holes (as in "o"), is always accurate in the Preview panel above.</p>
+    <p class="credit">Crafted by PT Digital Pustaka Senarasi</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===================== Constants =====================
+  var UPM = 1000, ASCENDER = 800, DESCENDER = -200;
+  var CAP_HEIGHT = 700, X_HEIGHT = 500, BASELINE = 0;
+  var UNIT_SPAN = ASCENDER - DESCENDER; // 1000
+  var RASTER_MARGIN = 140;
+  var MIN_POINT_DIST = 3.5;
+  var SIMPLIFY_TOLERANCE = 2.5;
+  var LIVE_PX_PER_UNIT = 0.34;
+  var EXPORT_PX_PER_UNIT = 0.7;
+  var CLOSE_TOLERANCE_PX = 6;   // tightened from 12 — prevents accidental early close
+  var HANDLE_HIT_PX = 11;
+  var INK_HEX = '#16140F';
+  var PEN_GUIDE_COLOR = 'rgba(192,57,43,0.9)';
+  var SELECT_COLOR = 'rgba(74,99,201,0.95)';
+  var DBLCLICK_MS = 380;
+  var DBLCLICK_PX = 22;
+
+  var STROKE_WEIGHTS = { thin: 24, regular: 46, bold: 78 };
+
+  var GROUPS = [
+    { label: 'NUMBERS', chars: '0123456789'.split('') },
+    { label: 'CAPITALS', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
+    { label: 'LOWERCASE', chars: 'abcdefghijklmnopqrstuvwxyz'.split('') }
+  ];
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  var ALL_CHARS = GROUPS.reduce(function(acc, g){ return acc.concat(g.chars); }, []);
+  var DIGIT_NAMES = {'0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine'};
+  function glyphNameFor(ch){ return DIGIT_NAMES[ch] || ch; }
+  function defaultWidthFor(ch){
+    if ('iljI1'.indexOf(ch) >= 0) return 300;
+    if ('mwMW'.indexOf(ch) >= 0) return 760;
+    if (ch >= '0' && ch <= '9') return 560;
+    if (ch >= 'A' && ch <= 'Z') return 620;
+    return 560;
+  }
+
+  // ===================== State =====================
+  var glyphs = {};
+  ALL_CHARS.forEach(function(ch){
+    glyphs[ch] = {
+      marks: [],
+      width: defaultWidthFor(ch),
+      ref: { active: false, opacity: 0.4, locked: false,
+             fx: 0, fy: 0, fw: 600, fh: 700,
+             ix: 0, iy: 0, iw: 600, ih: 700 }
+    };
+  });
+
+  var activeChar = ALL_CHARS[0];
+  var currentWeight = 'regular';
+  var currentMode = 'move'; // 'move' | 'select' | 'freehand' | 'pen'
+
+  var isDrawing = false;
+  var currentStroke = null;
+  var lastPoint = null;
+
+  var inProgressPen = null;
+  var pendingAnchor = null;
+  var isPlacingAnchor = false;
+  var isClosingPath = false;   // true while drag-closing: sets closing curve before committing fill
+  var penHoverPos = null;
+
+  var altDown = false;
+  var shiftDown = false;
+
+  var refImage = { img: null };
+
+  var drawingLayerVisible = true;
+  var drawingLayerLocked = false;
+
+  // selectedObject: {type:'pen', mark, showAnchors:bool} | {type:'ref', showAnchors:false}
+  var selectedObject = null;
+  var dragState = null;
+  var lastClickTime = 0, lastClickPos = null;
+
+  // per-char undo/redo stacks
+  var history = {}, historyIndex = {};
+  ALL_CHARS.forEach(function(ch){ history[ch] = [{marks:[], inProgress:null}]; historyIndex[ch] = 0; });
+
+  var needsInkRedraw = false;
+  var emScale = 1;
+
+  // ===================== DOM refs =====================
+  var canvasWrap = document.getElementById('canvasWrap');
+  var guidesCanvas = document.getElementById('guidesCanvas');
+  var refCanvas = document.getElementById('refCanvas');
+  var inkCanvas = document.getElementById('inkCanvas');
+  var guidesCtx = guidesCanvas.getContext('2d');
+  var refCtx = refCanvas.getContext('2d');
+  var inkCtx = inkCanvas.getContext('2d');
+
+  var currentCharLabel = document.getElementById('currentCharLabel');
+  var widthInput = document.getElementById('widthInput');
+  var progressLabel = document.getElementById('progressLabel');
+  var fontNameInput = document.getElementById('fontNameInput');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var statusLine = document.getElementById('statusLine');
+  var previewInput = document.getElementById('previewInput');
+  var previewOutput = document.getElementById('previewOutput');
+  var undoBtn = document.getElementById('undoBtn');
+  var redoBtn = document.getElementById('redoBtn');
+  var clearBtn = document.getElementById('clearBtn');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var charGroupsEl = document.getElementById('charGroups');
+  var modeGroup = document.getElementById('modeGroup');
+  var weightGroup = document.getElementById('weightGroup');
+  var penActionsGroup = document.getElementById('penActionsGroup');
+  var closePathBtn = document.getElementById('closePathBtn');
+  var cancelPathBtn = document.getElementById('cancelPathBtn');
+  var uploadRefBtn = document.getElementById('uploadRefBtn');
+  var refFileInput = document.getElementById('refFileInput');
+  var refControls = document.getElementById('refControls');
+  var toggleRefBtn = document.getElementById('toggleRefBtn');
+  var lockRefBtn = document.getElementById('lockRefBtn');
+  var fitRefBtn = document.getElementById('fitRefBtn');
+  var refOpacity = document.getElementById('refOpacity');
+  var removeRefBtn = document.getElementById('removeRefBtn');
+  var canvasNote = document.getElementById('canvasNote');
+  var layerDrawingRow = document.getElementById('layerDrawingRow');
+  var layerRefRow = document.getElementById('layerRefRow');
+  var drawingVisBtn = document.getElementById('drawingVisBtn');
+  var drawingLockBtn = document.getElementById('drawingLockBtn');
+  var refLayerVisBtn = document.getElementById('refLayerVisBtn');
+  var refLayerLockBtn = document.getElementById('refLayerLockBtn');
+
+  var DEFAULT_NOTE = canvasNote.textContent;
+  var SELECT_NOTE_PEN_MOVE = 'Drag to move · drag a handle to resize (Shift = lock ratio) · double-click to edit anchor points.';
+  var SELECT_NOTE_PEN = 'Drag anchor to reshape · drag handle to bend curve · Alt+handle = break mirror · double-click anchor to toggle smooth/corner.';
+  var SELECT_NOTE_REF = 'Drag to move · drag handle to resize (Shift = lock ratio) · double-click to finish.';
+
+  // ===================== Accessibility helper =====================
+  function makeActionable(el, handler){
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); handler(e); }
+    });
+  }
+
+  // ===================== Coordinate transforms =====================
+  function unitToPxX(u){ return u * emScale; }
+  function unitToPxY(u){ return (ASCENDER - u) * emScale; }
+  function pxToUnitX(px){ return px / emScale; }
+  function pxToUnitY(px){ return ASCENDER - px / emScale; }
+
+  // ===================== Contour tracer (marching squares) — validated =====================
+  function traceMask(maskGet, W, H){
+    function val(x, y){ if (x < 0 || y < 0 || x >= W || y >= H) return 0; return maskGet(x, y); }
+    var segments = [];
+    function Hp(cx, cy){ return { key: 'h_' + cx + '_' + cy, x: cx + 0.5, y: cy }; }
+    function Vp(cx, cy){ return { key: 'v_' + cx + '_' + cy, x: cx, y: cy + 0.5 }; }
+    for (var cy = 0; cy <= H - 1; cy++){
+      for (var cx = 0; cx <= W - 1; cx++){
+        var a = val(cx, cy), b = val(cx + 1, cy), c = val(cx + 1, cy + 1), d = val(cx, cy + 1);
+        var code = a * 8 + b * 4 + c * 2 + d;
+        if (code === 0 || code === 15) continue;
+        var T = Hp(cx, cy), Bo = Hp(cx, cy + 1), L = Vp(cx, cy), R = Vp(cx + 1, cy);
+        switch (code){
+          case 1: case 14: segments.push([L, Bo]); break;
+          case 2: case 13: segments.push([R, Bo]); break;
+          case 3: case 12: segments.push([L, R]); break;
+          case 4: case 11: segments.push([T, R]); break;
+          case 6: case 9: segments.push([T, Bo]); break;
+          case 7: case 8: segments.push([T, L]); break;
+          case 5: segments.push([T, R]); segments.push([L, Bo]); break;
+          case 10: segments.push([T, L]); segments.push([R, Bo]); break;
+        }
+      }
+    }
+    var byKey = {};
+    segments.forEach(function(seg){
+      seg.forEach(function(p, idx){
+        var other = seg[1 - idx];
+        if (!byKey[p.key]) byKey[p.key] = [];
+        byKey[p.key].push({ other: other, seg: seg });
+      });
+    });
+    var usedSeg = new Set();
+    var loops = [];
+    segments.forEach(function(seg, segIdx){
+      if (usedSeg.has(segIdx)) return;
+      var loopPts = [seg[0], seg[1]];
+      usedSeg.add(segIdx);
+      var guard = 0;
+      while (guard++ < 400000){
+        var lastKey = loopPts[loopPts.length - 1].key;
+        if (lastKey === loopPts[0].key && loopPts.length > 2) break;
+        var candidates = byKey[lastKey] || [];
+        var found = null;
+        for (var i = 0; i < candidates.length; i++){
+          var entry = candidates[i];
+          var idxOfSeg = segments.indexOf(entry.seg);
+          if (!usedSeg.has(idxOfSeg)){ found = entry; usedSeg.add(idxOfSeg); break; }
+        }
+        if (!found) break;
+        loopPts.push(found.other);
+      }
+      if (loopPts.length >= 3){
+        var lastP = loopPts[loopPts.length - 1];
+        if (lastP.key === loopPts[0].key) loopPts.pop();
+        loops.push(loopPts.map(function(p){ return [p.x, p.y]; }));
+      }
+    });
+    return loops;
+  }
+
+  function signedArea(pts){
+    var sum = 0;
+    for (var i = 0; i < pts.length; i++){
+      var p1 = pts[i], p2 = pts[(i + 1) % pts.length];
+      sum += (p1[0] * p2[1] - p2[0] * p1[1]);
+    }
+    return sum / 2;
+  }
+  function pointInPolygon(pt, poly){
+    var x = pt[0], y = pt[1], inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++){
+      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function centroidOf(pts){
+    var x = 0, y = 0;
+    pts.forEach(function(p){ x += p[0]; y += p[1]; });
+    return [x / pts.length, y / pts.length];
+  }
+  function pointInsideOwnPolygon(poly){
+    var minY = Infinity;
+    poly.forEach(function(p){ if (p[1] < minY) minY = p[1]; });
+    var above = poly.map(function(p){ return p[1]; }).filter(function(y){ return y > minY; });
+    var nextY = above.length ? Math.min.apply(null, above) : minY + 1;
+    var scanY = minY + (nextY - minY) * 0.5;
+    var xs = [];
+    for (var i = 0; i < poly.length; i++){
+      var a = poly[i], b = poly[(i + 1) % poly.length];
+      if ((a[1] <= scanY && b[1] > scanY) || (b[1] <= scanY && a[1] > scanY)){
+        var t = (scanY - a[1]) / (b[1] - a[1]);
+        xs.push(a[0] + t * (b[0] - a[0]));
+      }
+    }
+    xs.sort(function(p, q){ return p - q; });
+    if (xs.length >= 2) return [(xs[0] + xs[1]) / 2, scanY];
+    return centroidOf(poly);
+  }
+  function simplifyLoop(points, tolerance){
+    if (points.length < 3) return points;
+    function perpDist(p, a, b){
+      var dx = b[0] - a[0], dy = b[1] - a[1];
+      var len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+      var t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (len * len);
+      var px = a[0] + t * dx, py = a[1] + t * dy;
+      return Math.hypot(p[0] - px, p[1] - py);
+    }
+    function rdp(pts){
+      if (pts.length < 3) return pts;
+      var first = pts[0], last = pts[pts.length - 1];
+      var maxDist = -1, maxIdx = -1;
+      for (var i = 1; i < pts.length - 1; i++){
+        var dd = perpDist(pts[i], first, last);
+        if (dd > maxDist){ maxDist = dd; maxIdx = i; }
+      }
+      if (maxDist > tolerance){
+        var left = rdp(pts.slice(0, maxIdx + 1));
+        var right = rdp(pts.slice(maxIdx));
+        return left.slice(0, -1).concat(right);
+      }
+      return [first, last];
+    }
+    var result = rdp(points.concat([points[0]]));
+    result.pop();
+    return result;
+  }
+  function filterDegenerate(loops, minArea){
+    minArea = minArea || 3;
+    return loops.filter(function(loop){ return loop.length >= 3 && Math.abs(signedArea(loop)) > minArea; });
+  }
+
+  // ===================== Bezier (pen tool) helpers =====================
+  function flattenCubic(p0, c1, c2, p3, steps){
+    var pts = [];
+    for (var i = 1; i <= steps; i++){
+      var t = i / steps, mt = 1 - t;
+      var x = mt*mt*mt*p0[0] + 3*mt*mt*t*c1[0] + 3*mt*t*t*c2[0] + t*t*t*p3[0];
+      var y = mt*mt*mt*p0[1] + 3*mt*mt*t*c1[1] + 3*mt*t*t*c2[1] + t*t*t*p3[1];
+      pts.push([x, y]);
+    }
+    return pts;
+  }
+  function flattenPenAnchors(anchors){
+    var pts = []; var n = anchors.length;
+    for (var i = 0; i < n; i++){
+      var a = anchors[i], b = anchors[(i + 1) % n];
+      pts.push([a.x, a.y]);
+      var c1 = a.handleOut ? [a.x + a.handleOut[0], a.y + a.handleOut[1]] : [a.x, a.y];
+      var c2 = b.handleIn ? [b.x + b.handleIn[0], b.y + b.handleIn[1]] : [b.x, b.y];
+      pts = pts.concat(flattenCubic([a.x, a.y], c1, c2, [b.x, b.y], 12));
+    }
+    return pts;
+  }
+  function reversePenAnchors(anchors){
+    return anchors.slice().reverse().map(function(a){
+      return { x: a.x, y: a.y, handleIn: a.handleOut, handleOut: a.handleIn };
+    });
+  }
+  function deepCopyAnchors(anchors){
+    return anchors.map(function(a){
+      return { x: a.x, y: a.y, handleIn: a.handleIn ? a.handleIn.slice() : null, handleOut: a.handleOut ? a.handleOut.slice() : null };
+    });
+  }
+
+  // Hit-test whether a pixel position (clientPos) is within hitRadiusPx of any bezier segment
+  // Returns {segIndex, t} of the nearest hit, or null
+  function hitTestBezierEdge(clientPos, anchors, hitRadiusPx){
+    var n = anchors.length;
+    var bestDist = hitRadiusPx, bestSeg = -1, bestT = 0;
+    for (var seg = 0; seg < n; seg++){
+      var a = anchors[seg], b = anchors[(seg + 1) % n];
+      var p0x = unitToPxX(a.x), p0y = unitToPxY(a.y);
+      var p3x = unitToPxX(b.x), p3y = unitToPxY(b.y);
+      var p1x = unitToPxX(a.handleOut ? a.x + a.handleOut[0] : a.x);
+      var p1y = unitToPxY(a.handleOut ? a.y + a.handleOut[1] : a.y);
+      var p2x = unitToPxX(b.handleIn ? b.x + b.handleIn[0] : b.x);
+      var p2y = unitToPxY(b.handleIn ? b.y + b.handleIn[1] : b.y);
+      for (var step = 1; step <= 50; step++){
+        var t = step / 50, mt = 1 - t;
+        var cx = mt*mt*mt*p0x + 3*mt*mt*t*p1x + 3*mt*t*t*p2x + t*t*t*p3x;
+        var cy = mt*mt*mt*p0y + 3*mt*mt*t*p1y + 3*mt*t*t*p2y + t*t*t*p3y;
+        var d = Math.hypot(clientPos[0] - cx, clientPos[1] - cy);
+        if (d < bestDist){ bestDist = d; bestSeg = seg; bestT = t; }
+      }
+    }
+    return bestSeg >= 0 ? { segIndex: bestSeg, t: bestT } : null;
+  }
+
+  // Insert a new anchor on the bezier at parameter t using de Casteljau subdivision
+  // Preserves curve shape exactly; updates surrounding handles accordingly
+  function insertAnchorAtT(anchors, segIndex, t){
+    var n = anchors.length;
+    var a = anchors[segIndex], b = anchors[(segIndex + 1) % n];
+    function lerp2(ax,ay,bx,by,tt){ return [(ax+(bx-ax)*tt), (ay+(by-ay)*tt)]; }
+    var p0 = [a.x, a.y];
+    var p1 = a.handleOut ? [a.x + a.handleOut[0], a.y + a.handleOut[1]] : [a.x, a.y];
+    var p2 = b.handleIn  ? [b.x + b.handleIn[0],  b.y + b.handleIn[1]]  : [b.x, b.y];
+    var p3 = [b.x, b.y];
+    var p01  = lerp2(p0[0],p0[1],p1[0],p1[1],t);
+    var p12  = lerp2(p1[0],p1[1],p2[0],p2[1],t);
+    var p23  = lerp2(p2[0],p2[1],p3[0],p3[1],t);
+    var p012 = lerp2(p01[0],p01[1],p12[0],p12[1],t);
+    var p123 = lerp2(p12[0],p12[1],p23[0],p23[1],t);
+    var pt   = lerp2(p012[0],p012[1],p123[0],p123[1],t);
+    // Update surrounding handles (subdivision sides)
+    a.handleOut = (Math.hypot(p01[0]-p0[0], p01[1]-p0[1]) < 0.01) ? null : [p01[0]-a.x, p01[1]-a.y];
+    b.handleIn  = (Math.hypot(p23[0]-p3[0], p23[1]-p3[1]) < 0.01) ? null : [p23[0]-b.x, p23[1]-b.y];
+    var newAnchor = {
+      x: pt[0], y: pt[1],
+      handleIn:  (Math.hypot(p012[0]-pt[0], p012[1]-pt[1]) < 0.01) ? null : [p012[0]-pt[0], p012[1]-pt[1]],
+      handleOut: (Math.hypot(p123[0]-pt[0], p123[1]-pt[1]) < 0.01) ? null : [p123[0]-pt[0], p123[1]-pt[1]]
+    };
+    // Insert at the correct position in the array
+    var insertAt = segIndex + 1;
+    if (insertAt >= n) anchors.push(newAnchor);  // closing-segment case
+    else anchors.splice(insertAt, 0, newAnchor);
+  }
+
+  // Generalized winding fix across mixed polygon (freehand-traced) + pen (bezier) contours
+  function fixWindingsMixed(items){
+    var flats = items.map(function(it){ return it.flat; });
+    var reps = flats.map(pointInsideOwnPolygon);
+    var depths = flats.map(function(f, i){
+      var d = 0;
+      flats.forEach(function(other, j){ if (i !== j && pointInPolygon(reps[i], other)) d++; });
+      return d;
+    });
+    return items.map(function(it, i){
+      var area = signedArea(it.flat);
+      var wantPositive = depths[i] % 2 === 0;
+      if (wantPositive !== (area > 0)){
+        if (it.kind === 'pen') return { kind: 'pen', flat: it.flat.slice().reverse(), ref: reversePenAnchors(it.ref) };
+        return { kind: 'poly', flat: it.flat.slice().reverse(), ref: it.ref.slice().reverse() };
+      }
+      return it;
+    });
+  }
+
+  // ===================== Rasterize freehand strokes -> raw polygon loops =====================
+  function rasterizeAndTraceRaw(strokes, pxPerUnit, advanceWidth){
+    if (!strokes.length) return [];
+    var minX = -RASTER_MARGIN, maxX = advanceWidth + RASTER_MARGIN;
+    var minY = DESCENDER - RASTER_MARGIN, maxY = ASCENDER + RASTER_MARGIN;
+    var W = Math.max(2, Math.ceil((maxX - minX) * pxPerUnit));
+    var H = Math.max(2, Math.ceil((maxY - minY) * pxPerUnit));
+    var off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    var octx = off.getContext('2d');
+    octx.fillStyle = '#000'; octx.strokeStyle = '#000';
+    octx.lineCap = 'round'; octx.lineJoin = 'round';
+    function toPx(p){ return [(p[0] - minX) * pxPerUnit, (maxY - p[1]) * pxPerUnit]; }
+    strokes.forEach(function(stroke){
+      var w = stroke.width * pxPerUnit;
+      if (stroke.points.length === 1){
+        var p0 = toPx(stroke.points[0]);
+        octx.beginPath(); octx.arc(p0[0], p0[1], Math.max(0.5, w / 2), 0, Math.PI * 2); octx.fill();
+      } else if (stroke.points.length > 1){
+        octx.lineWidth = w; octx.beginPath();
+        var first = toPx(stroke.points[0]); octx.moveTo(first[0], first[1]);
+        for (var i = 1; i < stroke.points.length; i++){ var pp = toPx(stroke.points[i]); octx.lineTo(pp[0], pp[1]); }
+        octx.stroke();
+      }
+    });
+    var imgData = octx.getImageData(0, 0, W, H).data;
+    function maskGet(x, y){ return imgData[(y * W + x) * 4 + 3] > 127 ? 1 : 0; }
+    var rawLoops = traceMask(maskGet, W, H);
+    var fontLoops = rawLoops.map(function(loop){
+      return loop.map(function(p){ return [minX + p[0] / pxPerUnit, maxY - p[1] / pxPerUnit]; });
+    });
+    return filterDegenerate(fontLoops, 4);
+  }
+
+  // ===================== Font building (opentype.js) =====================
+  function makeGlyph(ch, pxPerUnit){
+    var g = glyphs[ch];
+    var freehandMarks = g.marks.filter(function(m){ return m.type === 'freehand'; });
+    var penMarks = g.marks.filter(function(m){ return m.type === 'pen'; });
+
+    var items = [];
+    if (freehandMarks.length){
+      var polyLoops = rasterizeAndTraceRaw(freehandMarks, pxPerUnit, g.width);
+      polyLoops.forEach(function(loop){ items.push({ kind: 'poly', flat: loop, ref: loop }); });
+    }
+    penMarks.forEach(function(m){
+      items.push({ kind: 'pen', flat: flattenPenAnchors(m.anchors), ref: m.anchors });
+    });
+
+    var path = new opentype.Path();
+    if (items.length){
+      var fixed = fixWindingsMixed(items);
+      fixed.forEach(function(it){
+        if (it.kind === 'poly'){
+          var pts = simplifyLoop(it.ref, SIMPLIFY_TOLERANCE);
+          if (pts.length < 3) return;
+          path.moveTo(pts[0][0], pts[0][1]);
+          for (var i = 1; i < pts.length; i++) path.lineTo(pts[i][0], pts[i][1]);
+          path.close();
+        } else {
+          var anchors = it.ref;
+          if (anchors.length < 3) return;
+          path.moveTo(anchors[0].x, anchors[0].y);
+          var n = anchors.length;
+          for (var k = 0; k < n; k++){
+            var a = anchors[k], b = anchors[(k + 1) % n];
+            var c1 = a.handleOut ? [a.x + a.handleOut[0], a.y + a.handleOut[1]] : [a.x, a.y];
+            var c2 = b.handleIn ? [b.x + b.handleIn[0], b.y + b.handleIn[1]] : [b.x, b.y];
+            path.curveTo(c1[0], c1[1], c2[0], c2[1], b.x, b.y);
+          }
+          path.close();
+        }
+      });
+    }
+    return new opentype.Glyph({ name: glyphNameFor(ch), unicode: ch.charCodeAt(0), advanceWidth: g.width, path: path });
+  }
+
+  function buildFontObject(pxPerUnit, familyName){
+    var notdef = new opentype.Glyph({ name: '.notdef', unicode: 0, advanceWidth: 600, path: new opentype.Path() });
+    var space = new opentype.Glyph({ name: 'space', unicode: 32, advanceWidth: 300, path: new opentype.Path() });
+    var list = [notdef, space];
+    ALL_CHARS.forEach(function(ch){ list.push(makeGlyph(ch, pxPerUnit)); });
+    var psBase = (familyName || 'Aksara').replace(/[^a-zA-Z0-9-]/g, '') || 'Aksara';
+    return new opentype.Font({
+      familyName: familyName || 'Aksara', styleName: 'Regular', postScriptName: psBase + 'Regular',
+      unitsPerEm: UPM, ascender: ASCENDER, descender: DESCENDER, glyphs: list
+    });
+  }
+
+  // ===================== Bounding boxes & handles (for transform) =====================
+  function computePenBBox(anchors){
+    var xs = [], ys = [];
+    anchors.forEach(function(a){
+      xs.push(a.x); ys.push(a.y);
+      if (a.handleOut){ xs.push(a.x + a.handleOut[0]); ys.push(a.y + a.handleOut[1]); }
+      if (a.handleIn){ xs.push(a.x + a.handleIn[0]); ys.push(a.y + a.handleIn[1]); }
+    });
+    return { minX: Math.min.apply(null, xs), maxX: Math.max.apply(null, xs), minY: Math.min.apply(null, ys), maxY: Math.max.apply(null, ys) };
+  }
+  function computeRefBBoxRaw(ref){
+    return { minX: ref.fx, maxX: ref.fx + ref.fw, minY: ref.fy, maxY: ref.fy + ref.fh };
+  }
+  function computeRefBBox(){ return computeRefBBoxRaw(glyphs[activeChar].ref); }
+  function selectedBBox(){
+    if (!selectedObject) return null;
+    return selectedObject.type === 'pen' ? computePenBBox(selectedObject.mark.anchors) : computeRefBBox();
+  }
+  function handleFontPositions(bbox){
+    var midX = (bbox.minX + bbox.maxX) / 2, midY = (bbox.minY + bbox.maxY) / 2;
+    return {
+      nw: [bbox.minX, bbox.maxY], n: [midX, bbox.maxY], ne: [bbox.maxX, bbox.maxY],
+      w: [bbox.minX, midY], e: [bbox.maxX, midY],
+      sw: [bbox.minX, bbox.minY], s: [midX, bbox.minY], se: [bbox.maxX, bbox.minY]
+    };
+  }
+  var CURSORS = { nw:'nwse-resize', se:'nwse-resize', ne:'nesw-resize', sw:'nesw-resize', n:'ns-resize', s:'ns-resize', e:'ew-resize', w:'ew-resize' };
+  var HANDLE_EDGE_INSET = 10;
+  function getHandleScreenPositions(bbox){
+    var sizePx = canvasWrap.getBoundingClientRect().width;
+    var hp = handleFontPositions(bbox);
+    var out = {};
+    Object.keys(hp).forEach(function(key){
+      out[key] = [
+        clamp(unitToPxX(hp[key][0]), HANDLE_EDGE_INSET, sizePx - HANDLE_EDGE_INSET),
+        clamp(unitToPxY(hp[key][1]), HANDLE_EDGE_INSET, sizePx - HANDLE_EDGE_INSET)
+      ];
+    });
+    return out;
+  }
+  function fitRefToGuides(ref){
+    if (!refImage.img) return;
+    var imgW = refImage.img.naturalWidth, imgH = refImage.img.naturalHeight;
+    if (!imgW || !imgH) return;
+    var g = glyphs[activeChar];
+    var fw = g.width, fh = CAP_HEIGHT;
+    var sc = Math.max(fw / imgW, fh / imgH);
+    var iw = imgW * sc, ih = imgH * sc;
+    ref.fx = 0; ref.fy = 0; ref.fw = fw; ref.fh = fh;
+    ref.ix = (fw - iw) / 2; ref.iy = (fh - ih) / 2; ref.iw = iw; ref.ih = ih;
+  }
+
+  // ===================== Canvas setup =====================
+  function setupCanvasResolution(canvas){
+    var rect = canvasWrap.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return rect.width;
+  }
+  function resizeCanvases(){
+    var w1 = setupCanvasResolution(guidesCanvas);
+    setupCanvasResolution(refCanvas);
+    setupCanvasResolution(inkCanvas);
+    emScale = w1 / UNIT_SPAN;
+    drawGuides();
+    drawRefLayer();
+    drawInk(activeChar);
+  }
+
+  function drawDashedVLine(ctx, x, y0, y1, color){
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); ctx.restore();
+  }
+  function drawDashedHLine(ctx, y, x0, x1, color){
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.restore();
+  }
+
+  function drawGuides(){
+    var rect = canvasWrap.getBoundingClientRect();
+    var w = rect.width, h = rect.width;
+    guidesCtx.clearRect(0, 0, w, h);
+    guidesCtx.fillStyle = 'rgba(22,20,15,0.06)';
+    for (var u = 0; u <= 1000; u += 100){
+      for (var v = -200; v <= 800; v += 100){
+        var px = unitToPxX(u), py = unitToPxY(v);
+        if (px >= 0 && px <= w && py >= 0 && py <= h) guidesCtx.fillRect(px - 0.5, py - 0.5, 1, 1);
+      }
+    }
+    var gWidth = glyphs[activeChar].width;
+    var rightPx = unitToPxX(gWidth);
+    drawDashedHLine(guidesCtx, unitToPxY(CAP_HEIGHT), 0, w, 'rgba(74,99,201,0.55)');
+    drawDashedHLine(guidesCtx, unitToPxY(X_HEIGHT), 0, w, 'rgba(74,99,201,0.4)');
+    guidesCtx.save();
+    guidesCtx.strokeStyle = 'rgba(22,20,15,0.55)'; guidesCtx.lineWidth = 1;
+    guidesCtx.beginPath(); guidesCtx.moveTo(0, unitToPxY(BASELINE)); guidesCtx.lineTo(w, unitToPxY(BASELINE)); guidesCtx.stroke();
+    guidesCtx.restore();
+    drawDashedVLine(guidesCtx, unitToPxX(0), 0, h, 'rgba(22,20,15,0.18)');
+    drawDashedVLine(guidesCtx, rightPx, 0, h, 'rgba(192,57,43,0.65)');
+    guidesCtx.save();
+    guidesCtx.font = '9px ui-monospace, Menlo, monospace';
+    guidesCtx.fillStyle = 'rgba(22,20,15,0.45)';
+    guidesCtx.fillText('700', 3, unitToPxY(CAP_HEIGHT) - 3);
+    guidesCtx.fillText('500', 3, unitToPxY(X_HEIGHT) - 3);
+    guidesCtx.fillText('0', 3, unitToPxY(BASELINE) - 3);
+    guidesCtx.fillStyle = 'rgba(192,57,43,0.8)';
+    guidesCtx.fillText(String(gWidth), Math.min(rightPx + 3, w - 26), 11);
+    guidesCtx.restore();
+  }
+
+  function drawRefLayer(){
+    var rect = canvasWrap.getBoundingClientRect();
+    refCtx.clearRect(0, 0, rect.width, rect.width);
+    var ref = glyphs[activeChar].ref;
+    if (!refImage.img || !ref.active) return;
+    var fLeftPx = unitToPxX(ref.fx), fTopPx = unitToPxY(ref.fy + ref.fh);
+    var fWPx = ref.fw * emScale, fHPx = ref.fh * emScale;
+    var iLeftPx = unitToPxX(ref.ix), iTopPx = unitToPxY(ref.iy + ref.ih);
+    var iWPx = ref.iw * emScale, iHPx = ref.ih * emScale;
+    refCtx.save();
+    refCtx.globalAlpha = ref.opacity;
+    refCtx.beginPath();
+    refCtx.rect(fLeftPx, fTopPx, fWPx, fHPx);
+    refCtx.clip();
+    refCtx.drawImage(refImage.img, iLeftPx, iTopPx, iWPx, iHPx);
+    refCtx.restore();
+  }
+
+  function drawFreehandStroke(ctx, stroke){
+    var w = stroke.width * emScale;
+    if (stroke.points.length === 1){
+      var p = stroke.points[0];
+      ctx.beginPath(); ctx.arc(unitToPxX(p[0]), unitToPxY(p[1]), Math.max(0.5, w / 2), 0, Math.PI * 2); ctx.fill();
+    } else if (stroke.points.length > 1){
+      ctx.lineWidth = w; ctx.beginPath();
+      ctx.moveTo(unitToPxX(stroke.points[0][0]), unitToPxY(stroke.points[0][1]));
+      for (var i = 1; i < stroke.points.length; i++) ctx.lineTo(unitToPxX(stroke.points[i][0]), unitToPxY(stroke.points[i][1]));
+      ctx.stroke();
+    }
+  }
+
+  function drawPenShapeFilled(ctx, anchors){
+    if (anchors.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(unitToPxX(anchors[0].x), unitToPxY(anchors[0].y));
+    var n = anchors.length;
+    for (var i = 0; i < n; i++){
+      var a = anchors[i], b = anchors[(i + 1) % n];
+      var c1 = a.handleOut ? [a.x + a.handleOut[0], a.y + a.handleOut[1]] : [a.x, a.y];
+      var c2 = b.handleIn ? [b.x + b.handleIn[0], b.y + b.handleIn[1]] : [b.x, b.y];
+      ctx.bezierCurveTo(unitToPxX(c1[0]), unitToPxY(c1[1]), unitToPxX(c2[0]), unitToPxY(c2[1]), unitToPxX(b.x), unitToPxY(b.y));
+    }
+    ctx.closePath(); ctx.fill();
+  }
+
+  function drawPenPreview(ctx, inProgress, pending){
+    var anchors = inProgress.anchors;
+    ctx.save();
+    ctx.strokeStyle = PEN_GUIDE_COLOR; ctx.fillStyle = '#fff'; ctx.lineWidth = 1;
+    if (anchors.length){
+      ctx.beginPath();
+      ctx.moveTo(unitToPxX(anchors[0].x), unitToPxY(anchors[0].y));
+      for (var i = 0; i < anchors.length - 1; i++){
+        var a = anchors[i], b = anchors[i + 1];
+        var c1 = a.handleOut ? [a.x + a.handleOut[0], a.y + a.handleOut[1]] : [a.x, a.y];
+        var c2 = b.handleIn ? [b.x + b.handleIn[0], b.y + b.handleIn[1]] : [b.x, b.y];
+        ctx.bezierCurveTo(unitToPxX(c1[0]), unitToPxY(c1[1]), unitToPxX(c2[0]), unitToPxY(c2[1]), unitToPxX(b.x), unitToPxY(b.y));
+      }
+      if (pending){
+        var last = anchors[anchors.length - 1];
+        var lc1 = last.handleOut ? [last.x + last.handleOut[0], last.y + last.handleOut[1]] : [last.x, last.y];
+        var lc2 = pending.handleOut ? [pending.x - pending.handleOut[0], pending.y - pending.handleOut[1]] : [pending.x, pending.y];
+        ctx.bezierCurveTo(unitToPxX(lc1[0]), unitToPxY(lc1[1]), unitToPxX(lc2[0]), unitToPxY(lc2[1]), unitToPxX(pending.x), unitToPxY(pending.y));
+      }
+      ctx.stroke();
+      // check if hover is near first anchor (close-snap indicator)
+      var nearClose = false;
+      if (anchors.length >= 2 && penHoverPos){
+        var fPx = unitToPxX(anchors[0].x), fPy = unitToPxY(anchors[0].y);
+        nearClose = Math.hypot(penHoverPos[0] - fPx, penHoverPos[1] - fPy) <= CLOSE_TOLERANCE_PX * 2;
+      }
+      anchors.forEach(function(a, idx){
+        var px = unitToPxX(a.x), py = unitToPxY(a.y);
+        var isFirst = idx === 0;
+        if (isFirst && nearClose){
+          // green ring = "click here to close the path"
+          ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = PEN_GUIDE_COLOR; ctx.lineWidth = 1;
+        }
+        ctx.beginPath(); ctx.arc(px, py, isFirst && nearClose ? 4 : 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (a.handleOut){
+          var hx = unitToPxX(a.x + a.handleOut[0]), hy = unitToPxY(a.y + a.handleOut[1]);
+          var hx2 = unitToPxX(a.x - a.handleOut[0]), hy2 = unitToPxY(a.y - a.handleOut[1]);
+          ctx.beginPath(); ctx.moveTo(hx2, hy2); ctx.lineTo(hx, hy); ctx.stroke();
+          ctx.beginPath(); ctx.arc(hx, hy, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(hx2, hy2, 2, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+    }
+    if (pending){
+      var ppx = unitToPxX(pending.x), ppy = unitToPxY(pending.y);
+      ctx.beginPath(); ctx.arc(ppx, ppy, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (pending.handleOut){
+        var phx = unitToPxX(pending.x + pending.handleOut[0]), phy = unitToPxY(pending.y + pending.handleOut[1]);
+        var phx2 = unitToPxX(pending.x - pending.handleOut[0]), phy2 = unitToPxY(pending.y - pending.handleOut[1]);
+        ctx.beginPath(); ctx.moveTo(phx2, phy2); ctx.lineTo(phx, phy); ctx.stroke();
+        ctx.beginPath(); ctx.arc(phx, phy, 2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    // While closing by drag: draw the closing segment preview so user can see the curve
+    if (isClosingPath && anchors.length >= 2){
+      var closeLast = anchors[anchors.length - 1];
+      var closeFirst = anchors[0];
+      ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(unitToPxX(closeLast.x), unitToPxY(closeLast.y));
+      var clc1 = closeLast.handleOut ? [closeLast.x+closeLast.handleOut[0], closeLast.y+closeLast.handleOut[1]] : [closeLast.x, closeLast.y];
+      var clc2 = closeFirst.handleIn  ? [closeFirst.x+closeFirst.handleIn[0],  closeFirst.y+closeFirst.handleIn[1]]  : [closeFirst.x, closeFirst.y];
+      ctx.bezierCurveTo(unitToPxX(clc1[0]),unitToPxY(clc1[1]),unitToPxX(clc2[0]),unitToPxY(clc2[1]),unitToPxX(closeFirst.x),unitToPxY(closeFirst.y));
+      ctx.stroke();
+      // Draw the handle on the first anchor while dragging
+      if (closeFirst.handleOut){
+        ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 1;
+        var cfhx = unitToPxX(closeFirst.x+closeFirst.handleOut[0]), cfhy = unitToPxY(closeFirst.y+closeFirst.handleOut[1]);
+        var cfhx2 = unitToPxX(closeFirst.x-closeFirst.handleOut[0]), cfhy2 = unitToPxY(closeFirst.y-closeFirst.handleOut[1]);
+        ctx.beginPath(); ctx.moveTo(cfhx2,cfhy2); ctx.lineTo(cfhx,cfhy); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cfhx,cfhy,3,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cfhx2,cfhy2,3,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawTransformOverlay(ctx){
+    if (!selectedObject) return;
+    // Never show bounding box handles for in-progress pen path —
+    // anchor overlay (drawAnchorEditOverlay) is sufficient and less confusing
+    if (selectedObject.mark === inProgressPen) return;
+    var bbox = selectedBBox();
+    if (!bbox) return;
+    var hpPx = getHandleScreenPositions(bbox);
+    ctx.save();
+    ctx.strokeStyle = SELECT_COLOR; ctx.lineWidth = 1.2; ctx.setLineDash([5, 3]);
+    var left = unitToPxX(bbox.minX), top = unitToPxY(bbox.maxY);
+    var right = unitToPxX(bbox.maxX), bottom = unitToPxY(bbox.minY);
+    ctx.strokeRect(left, top, right - left, bottom - top);
+    ctx.setLineDash([]);
+    Object.keys(hpPx).forEach(function(key){
+      var px = hpPx[key][0], py = hpPx[key][1];
+      var isCorner = key.length === 2;
+      var r = isCorner ? 6 : 4.5;
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = SELECT_COLOR; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function drawAnchorEditOverlay(ctx){
+    if (!selectedObject || selectedObject.type !== 'pen') return;
+    var anchors = selectedObject.mark.anchors;
+    ctx.save();
+    ctx.strokeStyle = SELECT_COLOR; ctx.fillStyle = '#fff'; ctx.lineWidth = 1;
+    anchors.forEach(function(a){
+      var px = unitToPxX(a.x), py = unitToPxY(a.y);
+      if (a.handleOut){
+        var hx = unitToPxX(a.x + a.handleOut[0]), hy = unitToPxY(a.y + a.handleOut[1]);
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(hx, hy); ctx.stroke();
+        ctx.beginPath(); ctx.arc(hx, hy, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      if (a.handleIn){
+        var hx2 = unitToPxX(a.x + a.handleIn[0]), hy2 = unitToPxY(a.y + a.handleIn[1]);
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(hx2, hy2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(hx2, hy2, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function drawInk(ch){
+    var rect = canvasWrap.getBoundingClientRect();
+    inkCtx.clearRect(0, 0, rect.width, rect.width);
+    inkCtx.fillStyle = INK_HEX; inkCtx.strokeStyle = INK_HEX;
+    inkCtx.lineCap = 'round'; inkCtx.lineJoin = 'round';
+    if (drawingLayerVisible){
+      glyphs[ch].marks.forEach(function(m){
+        if (m.type === 'freehand') drawFreehandStroke(inkCtx, m);
+        else if (m.type === 'pen') drawPenShapeFilled(inkCtx, m.anchors);
+      });
+    }
+    if (currentMode === 'freehand' && currentStroke && !drawingLayerLocked) drawFreehandStroke(inkCtx, currentStroke);
+    // Always render in-progress pen path regardless of current tool —
+    // pass pendingAnchor only when actively drawing (pen mode), null otherwise
+    if (inProgressPen && !drawingLayerLocked){
+      drawPenPreview(inkCtx, inProgressPen, (currentMode === 'pen') ? pendingAnchor : null);
+    }
+    drawTransformOverlay(inkCtx);
+    // Show anchor edit overlay when selected object has showAnchors=true
+    // (includes in-progress path when in A mode)
+    if (selectedObject && selectedObject.type === 'pen' && selectedObject.showAnchors) drawAnchorEditOverlay(inkCtx);
+  }
+
+  // ===================== Selection / transform =====================
+  // includeRef: V mode = true, A mode = false (ref only moveable with Move tool)
+  function hitTestTransformable(clientX, clientY, includeRef){
+    var rect = inkCanvas.getBoundingClientRect();
+    var fontPos = [pxToUnitX(clientX - rect.left), pxToUnitY(clientY - rect.top)];
+    if (drawingLayerVisible && !drawingLayerLocked){
+      var marks = glyphs[activeChar].marks;
+      for (var i = marks.length - 1; i >= 0; i--){
+        var m = marks[i];
+        if (m.type === 'pen' && pointInPolygon(fontPos, flattenPenAnchors(m.anchors))) return { type: 'pen', mark: m };
+      }
+    }
+    if (includeRef){
+      var ref = glyphs[activeChar].ref;
+      if (refImage.img && ref.active && !ref.locked){
+        var bbox = computeRefBBox();
+        if (fontPos[0] >= bbox.minX && fontPos[0] <= bbox.maxX && fontPos[1] >= bbox.minY && fontPos[1] <= bbox.maxY) return { type: 'ref' };
+      }
+    }
+    return null;
+  }
+  // Anchor/handle hit-testing only valid when showAnchors is true
+  function hitTestAnchor(clientPos){
+    if (!selectedObject || selectedObject.type !== 'pen' || !selectedObject.showAnchors) return null;
+    var anchors = selectedObject.mark.anchors;
+    for (var i = 0; i < anchors.length; i++){
+      var px = unitToPxX(anchors[i].x), py = unitToPxY(anchors[i].y);
+      if (Math.hypot(clientPos[0] - px, clientPos[1] - py) <= 9) return { anchorIndex: i };
+    }
+    return null;
+  }
+  function hitTestHandleDot(clientPos){
+    if (!selectedObject || selectedObject.type !== 'pen' || !selectedObject.showAnchors) return null;
+    var anchors = selectedObject.mark.anchors;
+    for (var i = 0; i < anchors.length; i++){
+      var a = anchors[i];
+      if (a.handleOut){
+        var px = unitToPxX(a.x + a.handleOut[0]), py = unitToPxY(a.y + a.handleOut[1]);
+        if (Math.hypot(clientPos[0] - px, clientPos[1] - py) <= 8) return { anchorIndex: i, isOutHandle: true };
+      }
+      if (a.handleIn){
+        var px2 = unitToPxX(a.x + a.handleIn[0]), py2 = unitToPxY(a.y + a.handleIn[1]);
+        if (Math.hypot(clientPos[0] - px2, clientPos[1] - py2) <= 8) return { anchorIndex: i, isOutHandle: false };
+      }
+    }
+    return null;
+  }
+  // Unified selection setter — showAnchors=false for Move tool, true for Direct Select
+  function setSelected(hit, showAnchors){
+    if (inProgressPen) cancelInProgressPen();
+    selectedObject = { type: hit.type, showAnchors: !!showAnchors };
+    if (hit.mark) selectedObject.mark = hit.mark;
+    canvasNote.classList.add('active-hint');
+    if (hit.type === 'ref') canvasNote.textContent = SELECT_NOTE_REF;
+    else canvasNote.textContent = showAnchors ? SELECT_NOTE_PEN : SELECT_NOTE_PEN_MOVE;
+    needsInkRedraw = true;
+    drawRefLayer();
+  }
+  // Keep for backward compat (called from double-click in draw modes)
+  function selectObjectForTransform(hit){ setSelected(hit, true); }
+  function deselectObject(){
+    if (!selectedObject) return;
+    var wasRef = selectedObject.type === 'ref';
+    selectedObject = null; dragState = null;
+    canvasNote.textContent = DEFAULT_NOTE;
+    canvasNote.classList.remove('active-hint');
+    inkCanvas.style.cursor = (currentMode === 'move' || currentMode === 'select') ? 'default' : 'crosshair';
+    needsInkRedraw = true;
+    if (wasRef) drawRefLayer();
+  }
+  function toggleAnchorSmooth(anchors, idx){
+    var a = anchors[idx];
+    if (a.handleOut || a.handleIn){
+      a.handleOut = null; a.handleIn = null;
+    } else {
+      var prev = anchors[(idx - 1 + anchors.length) % anchors.length];
+      var next = anchors[(idx + 1) % anchors.length];
+      var dx = next.x - prev.x, dy = next.y - prev.y;
+      var len = Math.hypot(dx, dy) || 1;
+      var handleLen = Math.max(20, len * 0.18);
+      var ux = dx / len, uy = dy / len;
+      a.handleOut = [ux * handleLen, uy * handleLen];
+      a.handleIn = [-ux * handleLen, -uy * handleLen];
+    }
+  }
+  function retroactivelyUndoLastClick(){
+    if (currentMode === 'freehand'){
+      if (isDrawing){ isDrawing = false; currentStroke = null; }
+      else {
+        var marks = glyphs[activeChar].marks;
+        var last = marks[marks.length - 1];
+        if (last && last.type === 'freehand' && last.points.length <= 2) marks.pop();
+      }
+    } else if (inProgressPen && inProgressPen.anchors.length <= 1){
+      inProgressPen = null; pendingAnchor = null; isPlacingAnchor = false;
+    }
+    needsInkRedraw = true; refreshGridState(); updateProgress(); updateUndoState(); scheduleLiveRebuild();
+  }
+
+  // ===================== Pointer input =====================
+  function eventToUnit(e){
+    var rect = inkCanvas.getBoundingClientRect();
+    var cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    return [pxToUnitX(cx), pxToUnitY(cy)];
+  }
+  // ===================== Undo / redo history =====================
+  function deepCopyMarks(marks){ return JSON.parse(JSON.stringify(marks)); }
+  function deepCopyPath(path){ return path ? JSON.parse(JSON.stringify(path)) : null; }
+
+  // pushHistory: saves current marks + optional in-progress pen path snapshot
+  // Call with inProgressSnapshot when the history entry should be able to reopen a path on undo
+  function pushHistory(ch, inProgressSnapshot){
+    history[ch] = history[ch].slice(0, historyIndex[ch] + 1);
+    history[ch].push({ marks: deepCopyMarks(glyphs[ch].marks), inProgress: inProgressSnapshot || null });
+    if (history[ch].length > 62){ history[ch].shift(); } else { historyIndex[ch]++; }
+    updateUndoState();
+  }
+
+  function restoreHistoryState(ch, state){
+    // Clear selection to avoid stale mark references
+    if (selectedObject && selectedObject.type === 'pen') {
+      selectedObject = null; dragState = null;
+      canvasNote.textContent = DEFAULT_NOTE; canvasNote.classList.remove('active-hint');
+    }
+    glyphs[ch].marks = deepCopyMarks(state.marks);
+    pendingAnchor = null; isPlacingAnchor = false;
+    if (state.inProgress){
+      // Restore the open path and switch to Pen tool so user can continue immediately
+      inProgressPen = deepCopyPath(state.inProgress);
+      applyMode('pen');
+      canvasNote.textContent = 'Path reopened — continue drawing, or press A to adjust anchors.';
+      canvasNote.classList.add('active-hint');
+    } else {
+      inProgressPen = null;
+    }
+    needsInkRedraw = true; refreshGridState(); updateProgress(); updateUndoState(); scheduleLiveRebuild();
+  }
+
+  function undoChar(){
+    var ch = activeChar;
+    if (historyIndex[ch] <= 0) return;
+    historyIndex[ch]--;
+    restoreHistoryState(ch, history[ch][historyIndex[ch]]);
+  }
+  function redoChar(){
+    var ch = activeChar;
+    if (historyIndex[ch] >= history[ch].length - 1) return;
+    historyIndex[ch]++;
+    restoreHistoryState(ch, history[ch][historyIndex[ch]]);
+  }
+
+  function freehandPointerDown(e){
+    isDrawing = true;
+    var p = eventToUnit(e);
+    currentStroke = { type: 'freehand', points: [p], width: STROKE_WEIGHTS[currentWeight] };
+    lastPoint = p; needsInkRedraw = true;
+  }
+  function freehandPointerMove(e){
+    if (!isDrawing || !currentStroke) return;
+    var p = eventToUnit(e);
+    var dx = p[0] - lastPoint[0], dy = p[1] - lastPoint[1];
+    if (Math.sqrt(dx * dx + dy * dy) >= MIN_POINT_DIST){
+      currentStroke.points.push(p); lastPoint = p; needsInkRedraw = true;
+    }
+  }
+  function freehandFinish(){
+    if (!isDrawing) return;
+    isDrawing = false;
+    if (currentStroke && currentStroke.points.length){ glyphs[activeChar].marks.push(currentStroke); pushHistory(activeChar); }
+    currentStroke = null; needsInkRedraw = true;
+    refreshGridState(); updateProgress(); scheduleLiveRebuild(); updateUndoState();
+  }
+
+  function penPointerDown(e){
+    var p = eventToUnit(e);
+    var rect = inkCanvas.getBoundingClientRect();
+    var downPx = [e.clientX - rect.left, e.clientY - rect.top];
+
+    // ── No in-progress path: either add anchor to existing shape, or start new path ──
+    if (!inProgressPen || inProgressPen.anchors.length === 0){
+      if (!inProgressPen) inProgressPen = { anchors: [] };
+      // Check if clicking on the edge of an existing closed pen shape → insert anchor there
+      var marks = glyphs[activeChar].marks;
+      for (var mi = marks.length - 1; mi >= 0; mi--){
+        var m = marks[mi];
+        if (m.type !== 'pen' || m.anchors.length < 3) continue;
+        var edgeHit = hitTestBezierEdge(downPx, m.anchors, 10);
+        if (edgeHit){
+          insertAnchorAtT(m.anchors, edgeHit.segIndex, edgeHit.t);
+          // Select the shape in Direct Select mode for immediate anchor adjustment
+          currentMode = 'select';
+          modeGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === 'select'); });
+          weightGroup.style.display = 'none'; penActionsGroup.style.display = 'none';
+          inkCanvas.style.cursor = 'default';
+          setSelected({type:'pen', mark:m}, true);
+          pushHistory(activeChar);
+          needsInkRedraw = true; scheduleLiveRebuild(); return;
+        }
+      }
+      // No edge hit → start a new path with the click as first anchor
+      isPlacingAnchor = true;
+      pendingAnchor = { x: p[0], y: p[1], handleOut: null };
+      needsInkRedraw = true; return;
+    }
+
+    // ── In-progress path: check special anchor interactions ──
+    var first = inProgressPen.anchors[0];
+    var firstPx = [unitToPxX(first.x), unitToPxY(first.y)];
+    var dFirst = Math.hypot(downPx[0] - firstPx[0], downPx[1] - firstPx[1]);
+
+    if (inProgressPen.anchors.length >= 3 && dFirst <= CLOSE_TOLERANCE_PX){
+      // Click (or start drag) on first anchor to close path
+      // Enter "closing drag" mode — don't fill yet, let user drag to set closing curve
+      isClosingPath = true;
+      // Reset first anchor's handles so drag sets them fresh
+      first.handleIn = null; first.handleOut = null;
+      needsInkRedraw = true; return;
+    }
+    if (inProgressPen.anchors.length < 3 && dFirst <= CLOSE_TOLERANCE_PX){
+      // Too few anchors to form a valid shape — cancel
+      cancelInProgressPen(); return;
+    }
+
+    // Click near LAST anchor → convert to corner (break outgoing handle)
+    var last = inProgressPen.anchors[inProgressPen.anchors.length - 1];
+    var lastPx = [unitToPxX(last.x), unitToPxY(last.y)];
+    var dLast = Math.hypot(downPx[0] - lastPx[0], downPx[1] - lastPx[1]);
+    if (dLast <= CLOSE_TOLERANCE_PX){
+      if (last.handleOut){ last.handleOut = null; needsInkRedraw = true; }
+      return; // don't place duplicate anchor
+    }
+
+    // Normal case: start placing a new anchor
+    isPlacingAnchor = true;
+    pendingAnchor = { x: p[0], y: p[1], handleOut: null };
+    needsInkRedraw = true;
+  }
+
+  function penPointerMove(e){
+    if (isClosingPath && inProgressPen){
+      // User is dragging from the first anchor to set the closing curve direction
+      var p = eventToUnit(e);
+      var first = inProgressPen.anchors[0];
+      var dx = p[0] - first.x, dy = p[1] - first.y;
+      var dist = Math.hypot(dx, dy);
+      if (dist > 1.5){
+        // Drag direction → handleOut of first anchor (smooth symmetric)
+        first.handleOut = [dx, dy];
+        first.handleIn = [-dx, -dy]; // mirror for smooth anchor
+      } else {
+        first.handleOut = null; first.handleIn = null;
+      }
+      needsInkRedraw = true; return;
+    }
+    if (!isPlacingAnchor || !pendingAnchor) return;
+    var p = eventToUnit(e);
+    var dx = p[0] - pendingAnchor.x, dy = p[1] - pendingAnchor.y;
+    pendingAnchor.handleOut = (Math.hypot(dx, dy) > 1.5) ? [dx, dy] : null;
+    needsInkRedraw = true;
+  }
+
+  function penPointerUp(){
+    if (isClosingPath){
+      isClosingPath = false;
+      // Now close the path with the handles that were set during drag
+      closeInProgressPen(); return;
+    }
+    if (!isPlacingAnchor || !pendingAnchor) return;
+    isPlacingAnchor = false;
+    var handleOut = pendingAnchor.handleOut;
+    var handleIn = handleOut ? [-handleOut[0], -handleOut[1]] : null;
+    inProgressPen.anchors.push({ x: pendingAnchor.x, y: pendingAnchor.y, handleOut: handleOut, handleIn: handleIn });
+    pendingAnchor = null; needsInkRedraw = true;
+    updatePenActionState();
+  }
+  function closeInProgressPen(){
+    if (!inProgressPen || inProgressPen.anchors.length < 3){ cancelInProgressPen(); return; }
+    var ch = activeChar;
+
+    // ── Two-entry history push for undoable close ──────────────────────────
+    // Entry A (pre-close): marks BEFORE the shape is added + the open path snapshot
+    //   → Ctrl+Z after close restores this, reopening the path for continued editing
+    // Entry B (post-close): marks WITH the new shape + no in-progress path
+    //   → This is the current state after closing
+
+    var openPathSnapshot = deepCopyPath(inProgressPen);     // open path before close
+    var marksBeforeClose = deepCopyMarks(glyphs[ch].marks); // marks before adding shape
+
+    // Add the closed shape to marks
+    glyphs[ch].marks.push({ type: 'pen', anchors: inProgressPen.anchors });
+
+    // Truncate any forward (redo) history at current index
+    history[ch] = history[ch].slice(0, historyIndex[ch] + 1);
+
+    // Entry A: the pre-close state (undo lands here → path reopens)
+    history[ch].push({ marks: marksBeforeClose, inProgress: openPathSnapshot });
+    historyIndex[ch]++;
+
+    // Entry B: the post-close state (current state)
+    history[ch].push({ marks: deepCopyMarks(glyphs[ch].marks), inProgress: null });
+    historyIndex[ch]++;
+
+    // Trim to max 64 entries
+    while (history[ch].length > 64){ history[ch].shift(); historyIndex[ch]--; }
+
+    inProgressPen = null; pendingAnchor = null; isPlacingAnchor = false;
+    needsInkRedraw = true;
+    refreshGridState(); updateProgress(); scheduleLiveRebuild(); updateUndoState(); updatePenActionState();
+  }
+  function cancelInProgressPen(){
+    inProgressPen = null; pendingAnchor = null; isPlacingAnchor = false; isClosingPath = false;
+    needsInkRedraw = true; updatePenActionState();
+  }
+  function updatePenActionState(){
+    var has = !!(inProgressPen && inProgressPen.anchors.length);
+    closePathBtn.classList.toggle('disabled', !has || inProgressPen.anchors.length < 3);
+    cancelPathBtn.classList.toggle('disabled', !has);
+  }
+
+  makeActionable(closePathBtn, function(){ if (inProgressPen) closeInProgressPen(); });
+  makeActionable(cancelPathBtn, function(){ if (inProgressPen) cancelInProgressPen(); });
+
+  // ----- transform drag (move/resize the selected pen shape or reference image; reshape individual anchors) -----
+  function beginTransformDrag(clientPos){
+    var so = selectedObject;
+    // pen: anchor/handle reshape takes highest priority
+    if (so.type === 'pen'){
+      var handleHit = hitTestHandleDot(clientPos);
+      if (handleHit){
+        dragState = { mode: 'handle-drag', anchorIndex: handleHit.anchorIndex, isOutHandle: handleHit.isOutHandle, didMove: false };
+        inkCanvas.style.cursor = 'crosshair'; return;
+      }
+      var anchorHit = hitTestAnchor(clientPos);
+      if (anchorHit){
+        var ah = so.mark.anchors[anchorHit.anchorIndex];
+        dragState = { mode: 'anchor-move', anchorIndex: anchorHit.anchorIndex, startClientPos: clientPos, startX: ah.x, startY: ah.y, didMove: false };
+        inkCanvas.style.cursor = 'move'; return;
+      }
+    }
+    var bbox = selectedBBox();
+    var hpPx = getHandleScreenPositions(bbox);
+    var hitHandle = null;
+    Object.keys(hpPx).forEach(function(key){
+      if (hitHandle) return;
+      if (Math.hypot(clientPos[0] - hpPx[key][0], clientPos[1] - hpPx[key][1]) <= HANDLE_HIT_PX) hitHandle = key;
+    });
+    if (hitHandle){
+      if (so.type === 'pen'){
+        dragState = { mode: 'resize', handle: hitHandle, startBBox: bbox, startAnchors: deepCopyAnchors(so.mark.anchors), didMove: false };
+      } else {
+        var ref = glyphs[activeChar].ref;
+        var aspect = ref.ih > 0 ? ref.iw / ref.ih : 1;
+        dragState = { mode: 'ref-resize', handle: hitHandle,
+          startFx: ref.fx, startFy: ref.fy, startFw: ref.fw, startFh: ref.fh,
+          startIx: ref.ix, startIy: ref.iy, startIw: ref.iw, startIh: ref.ih,
+          aspect: aspect, didMove: false };
+      }
+      inkCanvas.style.cursor = CURSORS[hitHandle]; return;
+    }
+    var left = unitToPxX(bbox.minX), top = unitToPxY(bbox.maxY), right = unitToPxX(bbox.maxX), bottom = unitToPxY(bbox.minY);
+    if (clientPos[0] >= left - 4 && clientPos[0] <= right + 4 && clientPos[1] >= top - 4 && clientPos[1] <= bottom + 4){
+      if (so.type === 'pen'){
+        dragState = { mode: 'move', startClientPos: clientPos, startAnchors: deepCopyAnchors(so.mark.anchors), didMove: false };
+      } else {
+        var ref2 = glyphs[activeChar].ref;
+        dragState = { mode: 'ref-move', startClientPos: clientPos,
+          startFx: ref2.fx, startFy: ref2.fy, startIx: ref2.ix, startIy: ref2.iy, didMove: false };
+      }
+      inkCanvas.style.cursor = 'move'; return;
+    }
+    dragState = null;
+  }
+
+  function updateTransformDrag(clientPos){
+    if (!dragState) return;
+    dragState.didMove = true;
+    var ref = glyphs[activeChar].ref;
+    if (dragState.mode === 'anchor-move'){
+      var dxF = (clientPos[0] - dragState.startClientPos[0]) / emScale;
+      var dyF = -(clientPos[1] - dragState.startClientPos[1]) / emScale;
+      var anch = selectedObject.mark.anchors[dragState.anchorIndex];
+      anch.x = dragState.startX + dxF; anch.y = dragState.startY + dyF;
+      needsInkRedraw = true; scheduleLiveRebuild(); return;
+    }
+    if (dragState.mode === 'handle-drag'){
+      var anch2 = selectedObject.mark.anchors[dragState.anchorIndex];
+      var curF = [pxToUnitX(clientPos[0]), pxToUnitY(clientPos[1])];
+      var nd = [curF[0] - anch2.x, curF[1] - anch2.y];
+      if (altDown){
+        // Alt/Option: break mirror — move only the dragged handle independently
+        if (dragState.isOutHandle) anch2.handleOut = nd;
+        else anch2.handleIn = nd;
+      } else {
+        if (dragState.isOutHandle){ anch2.handleOut = nd; anch2.handleIn = [-nd[0], -nd[1]]; }
+        else { anch2.handleIn = nd; anch2.handleOut = [-nd[0], -nd[1]]; }
+      }
+      needsInkRedraw = true; scheduleLiveRebuild(); return;
+    }
+    if (dragState.mode === 'move'){
+      var dxF2 = (clientPos[0] - dragState.startClientPos[0]) / emScale;
+      var dyF2 = -(clientPos[1] - dragState.startClientPos[1]) / emScale;
+      var anchList = selectedObject.mark.anchors, sa = dragState.startAnchors;
+      for (var i = 0; i < anchList.length; i++){
+        anchList[i].x = sa[i].x + dxF2; anchList[i].y = sa[i].y + dyF2;
+        anchList[i].handleIn = sa[i].handleIn ? sa[i].handleIn.slice() : null;
+        anchList[i].handleOut = sa[i].handleOut ? sa[i].handleOut.slice() : null;
+      }
+      needsInkRedraw = true; scheduleLiveRebuild(); return;
+    }
+    if (dragState.mode === 'ref-move'){
+      var dxR = (clientPos[0] - dragState.startClientPos[0]) / emScale;
+      var dyR = -(clientPos[1] - dragState.startClientPos[1]) / emScale;
+      ref.fx = dragState.startFx + dxR; ref.fy = dragState.startFy + dyR;
+      ref.ix = dragState.startIx + dxR; ref.iy = dragState.startIy + dyR;
+      drawRefLayer(); needsInkRedraw = true; return;
+    }
+    // resize modes
+    var curFont = [pxToUnitX(clientPos[0]), pxToUnitY(clientPos[1])];
+    if (dragState.mode === 'resize' && selectedObject.type === 'pen'){
+      var bbox = dragState.startBBox, h = dragState.handle;
+      var affX = h.indexOf('w') >= 0 || h.indexOf('e') >= 0;
+      var affY = h.indexOf('n') >= 0 || h.indexOf('s') >= 0;
+      var pivX = h.indexOf('w') >= 0 ? bbox.maxX : (h.indexOf('e') >= 0 ? bbox.minX : (bbox.minX+bbox.maxX)/2);
+      var pivY = h.indexOf('n') >= 0 ? bbox.minY : (h.indexOf('s') >= 0 ? bbox.maxY : (bbox.minY+bbox.maxY)/2);
+      var origX = h.indexOf('w') >= 0 ? bbox.minX : (h.indexOf('e') >= 0 ? bbox.maxX : pivX);
+      var origY = h.indexOf('n') >= 0 ? bbox.maxY : (h.indexOf('s') >= 0 ? bbox.minY : pivY);
+      var sX = affX ? clamp((curFont[0]-pivX)/(origX-pivX), 0.08, 24) : 1;
+      var sY = affY ? clamp((curFont[1]-pivY)/(origY-pivY), 0.08, 24) : 1;
+      if (shiftDown && affX && affY){ var s = (Math.abs(sX) + Math.abs(sY))/2; sX = s; sY = s; }
+      var sa2 = dragState.startAnchors, al = selectedObject.mark.anchors;
+      for (var k = 0; k < al.length; k++){
+        var a0 = sa2[k];
+        al[k].x = pivX + (a0.x - pivX) * sX; al[k].y = pivY + (a0.y - pivY) * sY;
+        al[k].handleOut = a0.handleOut ? [a0.handleOut[0]*sX, a0.handleOut[1]*sY] : null;
+        al[k].handleIn = a0.handleIn ? [a0.handleIn[0]*sX, a0.handleIn[1]*sY] : null;
+      }
+      needsInkRedraw = true; scheduleLiveRebuild(); return;
+    }
+    if (dragState.mode === 'ref-resize'){
+      var h2 = dragState.handle;
+      var oldFx = dragState.startFx, oldFy = dragState.startFy, oldFw = dragState.startFw, oldFh = dragState.startFh;
+      var newFx = oldFx, newFy = oldFy, newFw = oldFw, newFh = oldFh;
+      if (h2.indexOf('e') >= 0) newFw = Math.max(40, curFont[0] - oldFx);
+      if (h2.indexOf('w') >= 0){ newFw = Math.max(40, (oldFx + oldFw) - curFont[0]); newFx = curFont[0]; }
+      if (h2.indexOf('n') >= 0) newFh = Math.max(40, curFont[1] - oldFy);
+      if (h2.indexOf('s') >= 0){ newFh = Math.max(40, (oldFy + oldFh) - curFont[1]); newFy = curFont[1]; }
+      if (shiftDown){
+        // lock aspect ratio: use the dominant axis change
+        var domW = newFw / oldFw, domH = newFh / oldFh;
+        var sc = Math.max(domW, domH);
+        newFw = oldFw * sc; newFh = oldFh * sc;
+        if (h2.indexOf('w') >= 0) newFx = (oldFx + oldFw) - newFw;
+        if (h2.indexOf('s') >= 0) newFy = (oldFy + oldFh) - newFh;
+      }
+      var scW = newFw / oldFw, scH = newFh / oldFh;
+      ref.fx = newFx; ref.fy = newFy; ref.fw = newFw; ref.fh = newFh;
+      ref.iw = dragState.startIw * scW; ref.ih = dragState.startIh * scH;
+      ref.ix = newFx + (dragState.startIx - oldFx) * scW;
+      ref.iy = newFy + (dragState.startIy - oldFy) * scH;
+      drawRefLayer(); needsInkRedraw = true;
+    }
+  }
+
+  function updateHoverCursor(clientPos){
+    if (!selectedObject || dragState) return;
+    if (selectedObject.type === 'pen'){
+      if (hitTestHandleDot(clientPos)){ inkCanvas.style.cursor = 'crosshair'; return; }
+      if (hitTestAnchor(clientPos)){ inkCanvas.style.cursor = 'move'; return; }
+    }
+    var bbox = selectedBBox();
+    var hpPx = getHandleScreenPositions(bbox);
+    var found = null;
+    Object.keys(hpPx).forEach(function(key){
+      if (found) return;
+      if (Math.hypot(clientPos[0] - hpPx[key][0], clientPos[1] - hpPx[key][1]) <= HANDLE_HIT_PX) found = key;
+    });
+    if (found){ inkCanvas.style.cursor = CURSORS[found]; return; }
+    var left = unitToPxX(bbox.minX), top = unitToPxY(bbox.maxY), right = unitToPxX(bbox.maxX), bottom = unitToPxY(bbox.minY);
+    inkCanvas.style.cursor = (clientPos[0] >= left && clientPos[0] <= right && clientPos[1] >= top && clientPos[1] <= bottom) ? 'move' : 'default';
+  }
+
+  inkCanvas.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    inkCanvas.setPointerCapture(e.pointerId);
+    var rect = inkCanvas.getBoundingClientRect();
+    var clientPos = [e.clientX - rect.left, e.clientY - rect.top];
+    var now = Date.now();
+    var isDbl = lastClickPos && (now - lastClickTime < DBLCLICK_MS) &&
+                Math.hypot(e.clientX - lastClickPos[0], e.clientY - lastClickPos[1]) < DBLCLICK_PX;
+    lastClickTime = now; lastClickPos = [e.clientX, e.clientY];
+
+    // ── MOVE TOOL (V) ──────────────────────────────────────────────────
+    if (currentMode === 'move'){
+      if (selectedObject){
+        if (isDbl && selectedObject.type === 'pen'){
+          // Double-click → switch to anchor editing, upgrade showAnchors
+          selectedObject.showAnchors = true;
+          // Visually switch active tool to 'select'
+          currentMode = 'select';
+          modeGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === 'select'); });
+          weightGroup.style.display = 'none'; penActionsGroup.style.display = 'none';
+          inkCanvas.style.cursor = 'default';
+          canvasNote.textContent = SELECT_NOTE_PEN;
+          needsInkRedraw = true; lastClickTime = 0; return;
+        }
+        beginTransformDrag(clientPos); return;
+      }
+      // No current selection — try to hit pen shape or ref image
+      var hitV = hitTestTransformable(e.clientX, e.clientY, true);
+      if (hitV){ setSelected(hitV, false); return; } // showAnchors=false in move mode
+      deselectObject(); return;
+    }
+
+    // ── DIRECT SELECT TOOL (A) ─────────────────────────────────────────
+    if (currentMode === 'select'){
+      if (selectedObject && selectedObject.type === 'pen'){
+        if (isDbl){
+          var anchorHit = hitTestAnchor(clientPos);
+          if (anchorHit){
+            toggleAnchorSmooth(selectedObject.mark.anchors, anchorHit.anchorIndex);
+            pushHistory(activeChar); needsInkRedraw = true; scheduleLiveRebuild(); lastClickTime = 0; return;
+          }
+          deselectObject(); lastClickTime = 0; return;
+        }
+        beginTransformDrag(clientPos); return;
+      }
+      // No current selection — hit test pen shapes ONLY (A tool cannot grab ref image)
+      var hitA = hitTestTransformable(e.clientX, e.clientY, false);
+      if (hitA && hitA.type === 'pen'){ setSelected(hitA, true); return; } // showAnchors=true
+      deselectObject(); return;
+    }
+
+    // ── FREEHAND / PEN DRAW TOOLS ──────────────────────────────────────
+    // Existing selection still active? Deselect first and let the click fall through as draw
+    if (selectedObject){
+      if (isDbl){ deselectObject(); lastClickTime = 0; return; }
+      beginTransformDrag(clientPos); return;
+    }
+    // Double-click in draw modes → select shape without needing to switch tool
+    if (isDbl){
+      var blocked = (currentMode === 'pen' && inProgressPen && inProgressPen.anchors.length > 1);
+      if (!blocked){
+        var hitD = hitTestTransformable(e.clientX, e.clientY, currentMode === 'freehand');
+        if (hitD){ retroactivelyUndoLastClick(); setSelected(hitD, true); lastClickTime = 0; return; }
+      }
+    }
+    if (drawingLayerLocked) return; // locked: block drawing
+    if (currentMode === 'freehand') freehandPointerDown(e);
+    else penPointerDown(e);
+  });
+
+  inkCanvas.addEventListener('pointermove', function(e){
+    var rect = inkCanvas.getBoundingClientRect();
+    var clientPos = [e.clientX - rect.left, e.clientY - rect.top];
+    if (currentMode === 'pen' && !isPlacingAnchor && !isClosingPath && inProgressPen){
+      penHoverPos = clientPos; needsInkRedraw = true;
+    } else if (currentMode === 'pen' && isClosingPath){
+      penHoverPos = null; // suppress close-snap indicator while dragging to close
+      penPointerMove(e);
+    } else { penHoverPos = null; }
+    if (selectedObject){
+      if (dragState) updateTransformDrag(clientPos);
+      else updateHoverCursor(clientPos);
+      return;
+    }
+    if (currentMode === 'freehand') freehandPointerMove(e);
+    else if (currentMode === 'pen') penPointerMove(e);
+  });
+
+  function pointerEnd(){
+    if (selectedObject){
+      if (dragState && dragState.didMove && selectedObject.type === 'pen') pushHistory(activeChar);
+      dragState = null; return;
+    }
+    if (currentMode === 'freehand') freehandFinish();
+    else if (currentMode === 'pen') penPointerUp(); // handles both isClosingPath and isPlacingAnchor
+  }
+  inkCanvas.addEventListener('pointerup', pointerEnd);
+  inkCanvas.addEventListener('pointercancel', pointerEnd);
+  inkCanvas.addEventListener('pointerleave', function(){ if (isDrawing) pointerEnd(); penHoverPos = null; });
+
+  function rafLoop(){
+    if (needsInkRedraw){ drawInk(activeChar); needsInkRedraw = false; }
+    requestAnimationFrame(rafLoop);
+  }
+  requestAnimationFrame(rafLoop);
+
+  // ===================== Mode toggle =====================
+  var IN_PROGRESS_NOTE = 'Adjusting in-progress path. Drag anchors or handles. Press P to resume drawing from the last anchor.';
+
+  function applyMode(mode){
+    var prevMode = currentMode;
+    currentMode = mode;
+    modeGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === mode); });
+    weightGroup.style.display = mode === 'freehand' ? '' : 'none';
+    penActionsGroup.style.display = mode === 'pen' ? '' : 'none';
+    inkCanvas.style.cursor = (mode === 'move' || mode === 'select') ? 'default' : 'crosshair';
+
+    // Switching TO Direct Select (A) while a pen path is in progress:
+    // keep the path alive and auto-select it so anchors are editable
+    if (mode === 'select' && inProgressPen && inProgressPen.anchors.length > 0){
+      selectedObject = { type: 'pen', mark: inProgressPen, showAnchors: true };
+      canvasNote.textContent = IN_PROGRESS_NOTE;
+      canvasNote.classList.add('active-hint');
+    }
+    // Switching back TO Pen while in-progress path is selected via A:
+    // deselect (so the selection UI clears), path remains → user resumes drawing
+    else if (mode === 'pen' && selectedObject && selectedObject.mark === inProgressPen){
+      selectedObject = null;
+      canvasNote.textContent = DEFAULT_NOTE;
+      canvasNote.classList.remove('active-hint');
+    }
+    // Switching to Freehand/Move clears in-progress path selection but keeps the path frozen/visible
+    else if ((mode === 'freehand' || mode === 'move') && selectedObject && selectedObject.mark === inProgressPen){
+      selectedObject = null;
+      canvasNote.textContent = DEFAULT_NOTE;
+      canvasNote.classList.remove('active-hint');
+    }
+
+    needsInkRedraw = true;
+  }
+
+  modeGroup.querySelectorAll('.icon-btn').forEach(function(opt){
+    makeActionable(opt, function(){
+      // Do NOT cancel in-progress pen path on tool switch — preserve it for editing/resuming
+      // Only deselect completed shapes; in-progress path stays alive
+      if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
+      applyMode(opt.dataset.mode);
+    });
+  });
+
+  // ===================== Character grid =====================
+  function buildCharGrid(){
+    GROUPS.forEach(function(group){
+      var wrap = document.createElement('div'); wrap.className = 'chargroup';
+      var label = document.createElement('span'); label.className = 'chargroup-label'; label.textContent = group.label;
+      wrap.appendChild(label);
+      var grid = document.createElement('div'); grid.className = 'chargrid';
+      group.chars.forEach(function(ch){
+        var cell = document.createElement('span');
+        cell.className = 'charcell'; cell.textContent = ch; cell.dataset.char = ch;
+        makeActionable(cell, function(){ selectChar(ch); });
+        grid.appendChild(cell);
+      });
+      wrap.appendChild(grid);
+      charGroupsEl.appendChild(wrap);
+    });
+  }
+  function refreshGridState(){
+    charGroupsEl.querySelectorAll('.charcell').forEach(function(cell){
+      var ch = cell.dataset.char;
+      cell.classList.toggle('drawn', glyphs[ch].marks.length > 0);
+      cell.classList.toggle('active', ch === activeChar);
+    });
+  }
+  function updateProgress(){
+    var drawn = ALL_CHARS.filter(function(ch){ return glyphs[ch].marks.length > 0; }).length;
+    progressLabel.innerHTML = '<b>' + drawn + '</b>/' + ALL_CHARS.length + ' drawn';
+  }
+  function updateUndoState(){
+    var ch = activeChar;
+    var hasPenProgress = currentMode === 'pen' && inProgressPen && inProgressPen.anchors.length > 0;
+    var canUndo = hasPenProgress || historyIndex[ch] > 0;
+    var canRedo = historyIndex[ch] < history[ch].length - 1;
+    undoBtn.classList.toggle('disabled', !canUndo);
+    redoBtn.classList.toggle('disabled', !canRedo);
+    clearBtn.classList.toggle('disabled', !glyphs[ch].marks.length && !hasPenProgress);
+  }
+
+  var EYE_ICON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/></svg>';
+  var EYE_OFF_ICON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/><path d="M3 3l14 14"/></svg>';
+
+  var LOCK_CLOSED = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="10" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 016 0V9"/></svg>';
+  var LOCK_OPEN = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="10" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 016 0" /></svg>';
+
+  var EYE_ON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.2"/></svg>';
+  var EYE_OFF = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l14 14M8.5 5.2A8 8 0 0110 5c4.5 0 7.5 5 7.5 5a13 13 0 01-2.2 2.9M6.2 6.3C4.6 7.4 3.5 9 2.5 10c0 0 3 5 7.5 5a7.7 7.7 0 003.3-.7"/></svg>';
+
+  function updateLayerPanel(){
+    var ref = glyphs[activeChar].ref;
+    // Drawing row
+    layerDrawingRow.classList.toggle('hidden-layer', !drawingLayerVisible);
+    layerDrawingRow.classList.toggle('locked-layer', drawingLayerLocked);
+    drawingVisBtn.innerHTML = drawingLayerVisible ? EYE_ON : EYE_OFF;
+    drawingVisBtn.classList.toggle('active', drawingLayerVisible);
+    drawingVisBtn.title = drawingLayerVisible ? 'Hide drawing layer' : 'Show drawing layer';
+    drawingLockBtn.innerHTML = drawingLayerLocked ? LOCK_CLOSED : LOCK_OPEN;
+    drawingLockBtn.classList.toggle('active', drawingLayerLocked);
+    drawingLockBtn.title = drawingLayerLocked ? 'Unlock drawing layer' : 'Lock drawing layer';
+    // Reference row
+    var hasRef = !!refImage.img;
+    layerRefRow.style.opacity = hasRef ? '1' : '0.35';
+    layerRefRow.classList.toggle('hidden-layer', hasRef && !ref.active);
+    layerRefRow.classList.toggle('locked-layer', hasRef && ref.locked);
+    refLayerVisBtn.innerHTML = (hasRef && ref.active) ? EYE_ON : EYE_OFF;
+    refLayerVisBtn.classList.toggle('active', hasRef && ref.active);
+    refLayerVisBtn.title = (hasRef && ref.active) ? 'Hide reference image' : 'Show reference image';
+    refLayerLockBtn.innerHTML = (hasRef && ref.locked) ? LOCK_CLOSED : LOCK_OPEN;
+    refLayerLockBtn.classList.toggle('active', hasRef && ref.locked);
+    refLayerLockBtn.title = (hasRef && ref.locked) ? 'Unlock reference layer' : 'Lock reference layer';
+  }
+
+  function refreshRefUIForChar(){
+    var ref = glyphs[activeChar].ref;
+    if (refImage.img){
+      refControls.style.display = '';
+      toggleRefBtn.innerHTML = ref.active ? EYE_OFF_ICON : EYE_ICON;
+      toggleRefBtn.title = ref.active ? 'Hide' : 'Show';
+      toggleRefBtn.classList.toggle('active', ref.active);
+      lockRefBtn.innerHTML = ref.locked ? LOCK_CLOSED : LOCK_OPEN;
+      lockRefBtn.title = ref.locked ? 'Locked — click to unlock' : 'Unlocked — click to lock layer';
+      lockRefBtn.classList.toggle('active', ref.locked);
+      refOpacity.value = Math.round(ref.opacity * 100);
+    } else {
+      refControls.style.display = 'none';
+    }
+    updateLayerPanel();
+  }
+
+  function selectChar(ch){
+    if (inProgressPen) cancelInProgressPen();
+    deselectObject();
+    activeChar = ch;
+    currentCharLabel.textContent = ch;
+    widthInput.value = glyphs[ch].width;
+    refreshGridState();
+    updateUndoState();
+    refreshRefUIForChar();
+    drawGuides();
+    drawRefLayer();
+    drawInk(ch);
+  }
+  function step(delta){
+    var idx = ALL_CHARS.indexOf(activeChar);
+    selectChar(ALL_CHARS[(idx + delta + ALL_CHARS.length) % ALL_CHARS.length]);
+  }
+  makeActionable(prevBtn, function(){ step(-1); });
+  makeActionable(nextBtn, function(){ step(1); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.altKey || e.key === 'Alt') altDown = true;
+    if (e.shiftKey) shiftDown = true;
+    var tag = (e.target && e.target.tagName) || '';
+    var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+    if (ctrlKey && !e.shiftKey && e.key === 'z'){
+      e.preventDefault(); deselectObject();
+      if (currentMode === 'pen' && inProgressPen && inProgressPen.anchors.length){
+        inProgressPen.anchors.pop(); if (!inProgressPen.anchors.length) inProgressPen = null;
+        needsInkRedraw = true; updatePenActionState(); updateUndoState();
+      } else { undoChar(); }
+      return;
+    }
+    if ((ctrlKey && e.shiftKey && e.key === 'z') || (ctrlKey && !isMac && e.key === 'y')){
+      e.preventDefault(); deselectObject(); redoChar(); return;
+    }
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    // tool shortcuts
+    if (e.key === 'v' || e.key === 'V'){
+      if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
+      applyMode('move'); return;
+    }
+    if (e.key === 'a' || e.key === 'A'){
+      if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
+      applyMode('select'); return;
+    }
+    if (e.key === 'p' || e.key === 'P'){
+      if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
+      applyMode('pen'); return;
+    }
+    if (e.key === 'b' || e.key === 'B'){
+      if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
+      applyMode('freehand'); return;
+    }
+    if (selectedObject && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')){
+      e.preventDefault();
+      var nudge = e.shiftKey ? 16 : 4;
+      var ndx = e.key === 'ArrowLeft' ? -nudge : (e.key === 'ArrowRight' ? nudge : 0);
+      var ndy = e.key === 'ArrowUp' ? nudge : (e.key === 'ArrowDown' ? -nudge : 0);
+      if (selectedObject.type === 'pen'){
+        selectedObject.mark.anchors.forEach(function(a){ a.x += ndx; a.y += ndy; });
+        scheduleLiveRebuild();
+      } else {
+        var refN = glyphs[activeChar].ref;
+        refN.fx += ndx; refN.fy += ndy; refN.ix += ndx; refN.iy += ndy;
+        drawRefLayer();
+      }
+      needsInkRedraw = true; return;
+    }
+    if (e.key === 'Escape'){
+      if (selectedObject) deselectObject();
+      else if (inProgressPen) cancelInProgressPen();
+      return;
+    }
+    if (!selectedObject && !inProgressPen){
+      if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+    }
+  });
+  document.addEventListener('keyup', function(e){
+    if (!e.altKey) altDown = false;
+    if (!e.shiftKey) shiftDown = false;
+  });
+
+  // ===================== Tools: weight, width, undo, clear =====================
+  weightGroup.querySelectorAll('.icon-btn').forEach(function(opt){
+    makeActionable(opt, function(){
+      currentWeight = opt.dataset.weight;
+      weightGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o === opt); });
+    });
+  });
+
+  widthInput.addEventListener('change', function(){
+    var v = parseInt(widthInput.value, 10);
+    if (isNaN(v)) v = defaultWidthFor(activeChar);
+    v = Math.max(150, Math.min(900, Math.round(v / 10) * 10));
+    widthInput.value = v; glyphs[activeChar].width = v;
+    drawGuides(); scheduleLiveRebuild();
+  });
+
+  makeActionable(undoBtn, function(){
+    deselectObject();
+    if (currentMode === 'pen' && inProgressPen && inProgressPen.anchors.length){
+      inProgressPen.anchors.pop(); if (!inProgressPen.anchors.length) inProgressPen = null;
+      needsInkRedraw = true; updatePenActionState(); updateUndoState(); return;
+    }
+    undoChar();
+  });
+
+  makeActionable(redoBtn, function(){ deselectObject(); redoChar(); });
+
+  makeActionable(clearBtn, function(){
+    deselectObject();
+    var g = glyphs[activeChar];
+    if (!g.marks.length && !(inProgressPen && inProgressPen.anchors.length)) return;
+    g.marks = []; cancelInProgressPen(); pushHistory(activeChar);
+    needsInkRedraw = true; refreshGridState(); updateProgress(); updateUndoState(); scheduleLiveRebuild();
+  });
+
+  // ===================== Reference image =====================
+  makeActionable(uploadRefBtn, function(){ refFileInput.click(); });
+  refFileInput.addEventListener('change', function(e){
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        refImage.img = img;
+        ALL_CHARS.forEach(function(ch){ fitRefToGuides(glyphs[ch].ref); });
+        glyphs[activeChar].ref.active = true;
+        refreshRefUIForChar();
+        drawRefLayer();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    refFileInput.value = '';
+  });
+
+  makeActionable(lockRefBtn, function(){
+    var ref = glyphs[activeChar].ref;
+    ref.locked = !ref.locked;
+    if (ref.locked && selectedObject && selectedObject.type === 'ref') deselectObject();
+    refreshRefUIForChar();
+  });
+
+  makeActionable(fitRefBtn, function(){
+    if (!refImage.img) return;
+    fitRefToGuides(glyphs[activeChar].ref);
+    if (selectedObject && selectedObject.type === 'ref') deselectObject();
+    drawRefLayer();
+  });
+
+  makeActionable(toggleRefBtn, function(){
+    if (!refImage.img) return;
+    var ref = glyphs[activeChar].ref;
+    ref.active = !ref.active;
+    refreshRefUIForChar();
+    drawRefLayer();
+  });
+
+  refOpacity.addEventListener('input', function(){
+    glyphs[activeChar].ref.opacity = parseInt(refOpacity.value, 10) / 100;
+    drawRefLayer();
+  });
+
+  makeActionable(removeRefBtn, function(){
+    if (selectedObject && selectedObject.type === 'ref') deselectObject();
+    refImage.img = null;
+    ALL_CHARS.forEach(function(ch){ glyphs[ch].ref.active = false; });
+    refreshRefUIForChar();
+    drawRefLayer();
+  });
+
+  // ===================== Layers panel =====================
+  makeActionable(drawingVisBtn, function(){
+    drawingLayerVisible = !drawingLayerVisible;
+    updateLayerPanel(); needsInkRedraw = true;
+  });
+  makeActionable(drawingLockBtn, function(){
+    drawingLayerLocked = !drawingLayerLocked;
+    if (drawingLayerLocked && selectedObject && selectedObject.type === 'pen') deselectObject();
+    updateLayerPanel(); needsInkRedraw = true;
+  });
+  makeActionable(refLayerVisBtn, function(){
+    if (!refImage.img) return;
+    var ref = glyphs[activeChar].ref;
+    ref.active = !ref.active;
+    if (!ref.active && selectedObject && selectedObject.type === 'ref') deselectObject();
+    refreshRefUIForChar(); drawRefLayer();
+  });
+  makeActionable(refLayerLockBtn, function(){
+    if (!refImage.img) return;
+    var ref = glyphs[activeChar].ref;
+    ref.locked = !ref.locked;
+    if (ref.locked && selectedObject && selectedObject.type === 'ref') deselectObject();
+    refreshRefUIForChar();
+  });
+
+  // ===================== Live preview (FontFace API) =====================
+  var liveFamilyCounter = 0;
+  var lastLiveFontFace = null;
+  var liveRebuildTimer = null;
+  var defaultSample = 'Aa Bb Cc 0123';
+
+  function scheduleLiveRebuild(){
+    clearTimeout(liveRebuildTimer);
+    liveRebuildTimer = setTimeout(rebuildLiveFont, 350);
+  }
+  function rebuildLiveFont(){
+    try {
+      var hasAny = ALL_CHARS.some(function(ch){ return glyphs[ch].marks.length > 0; });
+      if (!hasAny){
+        if (lastLiveFontFace){ document.fonts.delete(lastLiveFontFace); lastLiveFontFace = null; previewOutput.style.fontFamily = ''; }
+        return;
+      }
+      var familyName = 'AksaraLive_' + (liveFamilyCounter++);
+      var font = buildFontObject(LIVE_PX_PER_UNIT, familyName);
+      var buffer = font.toArrayBuffer();
+      var fontFace = new FontFace(familyName, buffer);
+      fontFace.load().then(function(loaded){
+        document.fonts.add(loaded);
+        previewOutput.style.fontFamily = '"' + familyName + '", Georgia, serif';
+        if (lastLiveFontFace) document.fonts.delete(lastLiveFontFace);
+        lastLiveFontFace = loaded;
+      }).catch(function(err){ console.warn('Live preview failed to load', err); });
+    } catch (err){ console.warn('Live preview failed to build', err); }
+  }
+  previewInput.addEventListener('input', function(){ previewOutput.textContent = previewInput.value || defaultSample; });
+
+  // ===================== Download / export =====================
+  var statusTimer = null;
+  function showStatus(msg){
+    statusLine.textContent = msg;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function(){ statusLine.textContent = ''; }, 3800);
+  }
+  downloadBtn.addEventListener('click', function(){
+    var labelEl = downloadBtn.querySelector('span');
+    var drawnCount = ALL_CHARS.filter(function(ch){ return glyphs[ch].marks.length > 0; }).length;
+    if (drawnCount === 0){ showStatus('Draw at least one letter first.'); return; }
+    var originalText = labelEl.textContent;
+    downloadBtn.disabled = true; labelEl.textContent = 'Building font…';
+    setTimeout(function(){
+      try {
+        var familyName = (fontNameInput.value || '').trim() || 'My Font';
+        var font = buildFontObject(EXPORT_PX_PER_UNIT, familyName);
+        var arrayBuffer = font.toArrayBuffer();
+        var blob = new Blob([arrayBuffer], { type: 'font/otf' });
+        var url = URL.createObjectURL(blob);
+        var slug = familyName.replace(/[^a-zA-Z0-9-_]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'aksara';
+        var a = document.createElement('a');
+        a.href = url; a.download = slug + '.otf';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        showStatus('Downloaded: ' + slug + '.otf');
+      } catch (err){
+        console.error(err);
+        showStatus("Couldn't build the font. Try again.");
+      } finally {
+        downloadBtn.disabled = false; labelEl.textContent = originalText;
+      }
+    }, 30);
+  });
+
+  // ===================== Init =====================
+  buildCharGrid();
+  refreshGridState();
+  updateProgress();
+  updateUndoState();
+  widthInput.value = glyphs[activeChar].width;
+  currentCharLabel.textContent = activeChar;
+  previewOutput.textContent = defaultSample;
+  refreshRefUIForChar(); // also calls updateLayerPanel
+  applyMode('move'); // set initial tool state correctly
+  weightGroup.style.display = 'none'; // move mode has no weight group
+
+  var ro = new ResizeObserver(function(){ resizeCanvases(); });
+  ro.observe(canvasWrap);
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+
+})();
+</script>
+</body>
+</html>
