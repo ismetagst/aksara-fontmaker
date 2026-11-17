@@ -64,6 +64,19 @@ Or just open `aksara-font-maker.html` directly in any modern browser (Chrome, Fi
 7. Escape → deselect; Escape again → cancel path entirely
 ```
 
+**Detailed anchor controls:**
+Press **A**, select a pen shape, then click an anchor. Its handles are labeled **IN** (incoming, green) and **OUT** (outgoing, amber); these follow the path direction rather than fixed screen left/right.
+
+- **Corner:** remove both handles for a sharp corner.
+- **Smooth:** keep handles aligned while allowing different lengths.
+- **Symmetric:** keep both handles aligned and equally long.
+- **Independent:** adjust each direction and length separately; Alt/Option-dragging a handle switches to this mode permanently.
+- **Alt/Option-drag an anchor:** create a pair of handles without moving the anchor.
+- **Shift-drag a handle:** constrain its angle to 45° increments.
+- Use the anchor panel for exact X/Y positions and IN/OUT offsets in font units. Arrow keys move the selected anchor; without a selected anchor, they move the selected shape. Edits support undo/redo, including unfinished paths.
+
+Run the pen geometry checks with `node --test tests/pen-controls.test.cjs`.
+
 **Add anchor to existing shape:**
 With the Pen tool active and no path in progress, click directly on the edge of any filled shape. A new anchor is inserted at that exact point using de Casteljau subdivision — the curve does not change shape.
 
