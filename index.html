@@ -115,7 +115,7 @@
   button.cta svg{width:16px;height:16px;stroke:currentColor}
   button.cta:hover{background:#5140b8;transform:translateY(-1px)}button.cta:disabled{opacity:.45;transform:none}
   .status-line{position:absolute;right:0;top:100%;padding-top:5px;font-size:10px;color:var(--accent);white-space:nowrap;min-height:14px}
-  .layout{display:grid;grid-template-columns:234px minmax(0,1fr);grid-template-areas:'chars editor' 'chars preview';gap:22px}
+  .layout{display:grid;grid-template-columns:210px minmax(0,1fr);grid-template-areas:'chars editor' 'chars preview';gap:22px}
   .charpanel{grid-area:chars;align-self:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 18px}
   .panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
   .charpanel h2,.previewpanel h2,.editor-heading h2{font-size:13px;font-weight:650;margin:0;letter-spacing:-.2px}
@@ -168,14 +168,14 @@
   .anchor-panel{margin-top:14px;border:1px solid var(--line);border-radius:9px;padding:13px 10px;background:#fff}.anchor-panel h3{font-size:10px;margin:0 0 10px;font-weight:650}.anchor-help{font-size:10px;line-height:1.7;color:var(--muted);margin:8px 0}.anchor-modes{display:grid;grid-template-columns:1fr 1fr;gap:4px}.anchor-mode{font-size:10px;padding:6px 3px;border:1px solid var(--line);border-radius:5px;background:#fafafe}.anchor-mode[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);border-color:#c7bdf2}.anchor-fields{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.anchor-fields label{font-size:9px;color:var(--muted)}.anchor-fields input{display:block;width:100%;min-width:0;border:1px solid var(--line);border-radius:4px;background:#fafafe;padding:5px;font-size:11px}.handle-caption{font-size:9px;font-weight:600;color:var(--accent);margin:12px 0 0}.handle-caption.out{color:#4a75ce}.anchor-panel [hidden]{display:none!important}
 
   /* Artboard studio: rulers sit outside the drawing coordinate space. */
-  .editor-workspace{grid-template-columns:minmax(0,1fr) 186px;gap:20px;padding:20px;background:#f7f7fb}
+  .editor-workspace{grid-template-columns:minmax(0,1fr) 186px;gap:16px;padding:16px;background:#f7f7fb}
   .drawing-area{border:1px solid #dddfea;border-radius:12px;overflow:hidden;background:#e9eaf2}
   .canvas-chrome{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;background:#fdfdff;border-bottom:1px solid #dddfea}
   .canvas-document{display:flex;gap:9px;align-items:center;font-size:11px;font-weight:600}.canvas-document svg{width:15px;height:15px;color:var(--accent)}
   .canvas-document small{font-weight:400;font-size:10px;color:var(--muted)}
   .canvas-controls{display:flex;gap:4px}.view-toggle{border:1px solid transparent;border-radius:5px;background:transparent;color:var(--muted);font-size:10px;padding:5px 7px}.view-toggle:hover{background:#f0eef9;color:var(--accent)}.view-toggle[aria-pressed=true]{background:var(--accent-soft);border-color:#dfd8f8;color:var(--accent)}
-  .canvas-stage{padding:22px 24px 26px;background-color:#e9eaf2;background-image:radial-gradient(#cbd0de 0.65px,transparent 0.65px);background-size:10px 10px}
-  .artboard-shell{position:relative;width:min(546px,100%);margin:auto;padding:22px 0 0 22px}
+  .canvas-stage{display:grid;place-items:center;width:max-content;min-width:100%;min-height:100%;padding:20px;background:#edeef4}
+  .artboard-shell{position:relative;width:100%;margin:0;padding:22px 0 0 22px}
   .canvas-wrap{width:100%;border:0;outline:1px solid #ced0df;box-shadow:0 8px 26px #292a4312,0 1px 3px #292a4310}
   .canvas-ruler{position:absolute;color:#8b8da2;font:8px ui-monospace,SFMono-Regular,Consolas,monospace;pointer-events:none;user-select:none}
   .ruler-top{left:22px;right:0;top:0;height:22px;border-bottom:1px solid #ced0df;background:repeating-linear-gradient(90deg,#c3c6d5 0 1px,transparent 1px 5%) bottom/100% 4px no-repeat}
@@ -187,9 +187,18 @@
   .canvas-note{padding:12px 15px;margin:0;max-width:none;min-height:54px;background:#fdfdff;border-top:1px solid var(--line-soft);font-size:10px}
   .inspector{min-width:0}.layers-panel,.anchor-panel{box-shadow:0 2px 5px #24243d03;border-radius:10px}.layers-panel-title{color:#85829c}.layer-row{padding:10px 3px}.anchor-mode{padding:7px 3px}.anchor-fields input{padding:6px}.anchor-help{line-height:1.8}
   .editor-heading{background:#fdfdff}.editor-tag{background:#f5f3fc;color:#82789f;border-color:#e8e3f6}
-  @media(max-width:1100px){.editor-workspace{grid-template-columns:minmax(0,1fr)}.inspector{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.anchor-panel{margin-top:0}.shortcuts{grid-column:1/-1}.canvas-stage{padding:20px 26px 26px}}
-  @media(max-width:760px){.editor-workspace{padding:12px;gap:14px}.canvas-stage{padding:16px 16px 22px}.canvas-chrome{padding:10px 12px}.canvas-document small{display:none}.canvas-bottom{padding:9px 12px}.canvas-note{padding:10px 12px}.canvas-legend{gap:9px}}
-  @media(max-width:420px){.inspector{grid-template-columns:minmax(0,1fr)}.canvas-stage{padding:10px 10px 18px}.canvas-document{gap:6px}.canvas-chrome{gap:5px}.view-toggle{padding:5px}.canvas-bottom{flex-wrap:wrap;gap:6px}.canvas-units{margin-left:auto}}
+  @media(max-width:1100px){.editor-workspace{grid-template-columns:minmax(0,1fr)}.inspector{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.anchor-panel{margin-top:0}.shortcuts{grid-column:1/-1}.canvas-stage{padding:20px}}
+  @media(max-width:760px){.editor-workspace{padding:12px;gap:14px}.canvas-stage{padding:12px}.canvas-chrome{padding:10px 12px}.canvas-document small{display:none}.canvas-bottom{padding:9px 12px}.canvas-note{padding:10px 12px}.canvas-legend{gap:9px}}
+  @media(max-width:420px){.inspector{grid-template-columns:minmax(0,1fr)}.canvas-stage{padding:12px}.canvas-document{gap:6px}.canvas-chrome{gap:5px}.view-toggle{padding:5px}.canvas-bottom{flex-wrap:wrap;gap:6px}.canvas-units{margin-left:auto}}
+
+  .canvas-viewport{width:100%;aspect-ratio:1;max-height:720px;overflow:auto;position:relative;overscroll-behavior:contain;scrollbar-gutter:stable;touch-action:pan-x pan-y}
+  .canvas-viewport:focus-visible{outline:2px solid #b0a5f0;outline-offset:-2px}
+  .canvas-viewport.is-panning,.canvas-viewport.is-panning #inkCanvas{cursor:grab!important}
+  .canvas-viewport.is-dragging,.canvas-viewport.is-dragging #inkCanvas{cursor:grabbing!important;user-select:none}
+  .canvas-bottom{flex-wrap:wrap}.canvas-zoom{display:flex;align-items:center;gap:3px}.canvas-zoom button{height:28px;min-width:28px;border:1px solid transparent;border-radius:5px;background:transparent;font-size:13px;color:var(--muted)}.canvas-zoom button:hover{background:var(--accent-soft);color:var(--accent)}.canvas-zoom button:disabled{opacity:.3}.canvas-zoom output{min-width:42px;text-align:center;font-size:10px;font-variant-numeric:tabular-nums}.canvas-zoom .fit-view{font-size:10px;padding:0 8px;border-color:var(--line);margin-left:4px}
+  .pan-toggle{display:inline-flex;align-items:center;gap:4px}.pan-toggle svg{width:13px;height:13px}.canvas-units{font-size:9px}.canvas-ruler{color:#85899f}.canvas-legend{gap:9px}.canvas-chrome{padding:10px 12px}.canvas-note{min-height:48px;line-height:1.7}
+  @media(max-width:1100px){.canvas-viewport{max-height:680px}}
+  @media(max-width:760px){.canvas-legend{display:none}.canvas-bottom{gap:6px}.canvas-viewport{max-height:560px}.canvas-document{font-size:10px}.canvas-controls{gap:2px}}
 </style>
 </head>
 <body>
@@ -328,18 +337,18 @@
       <div class="editor-workspace"><div class="drawing-area">
       <div class="canvas-chrome">
         <div class="canvas-document"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="3" width="12" height="14" rx="2"/><path d="M7 7h6M7 10h4"/></svg><span>Artboard <span id="artboardCharLabel">0</span></span><small>Glyph workspace</small></div>
-        <div class="canvas-controls" role="group" aria-label="Canvas display"><button type="button" class="view-toggle" id="gridToggle" aria-pressed="true">Grid</button><button type="button" class="view-toggle" id="guidesToggle" aria-pressed="true">Guides</button></div>
+        <div class="canvas-controls" role="group" aria-label="Canvas display"><button type="button" class="view-toggle pan-toggle" id="panToggle" aria-pressed="false" title="Pan canvas (Space + drag, or middle mouse)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10V5a1.3 1.3 0 0 1 2.6 0v4-6a1.3 1.3 0 0 1 2.6 0v6-4a1.3 1.3 0 0 1 2.6 0v5-2a1.3 1.3 0 0 1 2.6 0v4c0 4-2 6-5 6H10c-2 0-3-1-4-3l-3-4a1.3 1.3 0 0 1 2-1l2 2"/></svg>Pan</button><button type="button" class="view-toggle" id="gridToggle" aria-pressed="true">Grid</button><button type="button" class="view-toggle" id="guidesToggle" aria-pressed="true">Guides</button></div>
       </div>
-      <div class="canvas-stage"><div class="artboard-shell">
+      <div class="canvas-viewport" id="canvasViewport" tabindex="0" role="region" aria-label="Drawing workspace. Use zoom controls or plus and minus keys. Space-drag to pan."><div class="canvas-stage" id="canvasStage"><div class="artboard-shell" id="artboardShell">
         <div class="canvas-ruler ruler-top" aria-hidden="true"><span style="left:0.0%">0</span><span style="left:20.0%">200</span><span style="left:40.0%">400</span><span style="left:60.0%">600</span><span style="left:80.0%">800</span><span style="left:100.0%">1000</span></div>
         <div class="canvas-ruler ruler-left" aria-hidden="true"><span style="top:0.0%">800</span><span style="top:20.0%">600</span><span style="top:40.0%">400</span><span style="top:60.0%">200</span><span style="top:80.0%">0</span><span style="top:100.0%">-200</span></div>
       <div class="canvas-wrap" id="canvasWrap">
         <canvas id="guidesCanvas"></canvas>
         <canvas id="refCanvas"></canvas>
         <canvas id="inkCanvas" aria-label="Glyph drawing canvas"></canvas>
-      </div></div></div>
-      <div class="canvas-bottom"><div class="canvas-legend"><span><i></i> Cap / x-height</span><span><i class="baseline-key"></i> Baseline</span></div><span class="canvas-units" id="canvasWidthLabel">560 advance · 1000 em</span></div>
-      <p class="canvas-note" id="canvasNote">V = move · A = anchor edit · P = pen · B = freehand · Shift+resize = lock ratio · Alt+handle = break mirror</p>
+      </div></div></div></div>
+      <div class="canvas-bottom"><div class="canvas-zoom" role="group" aria-label="Canvas zoom"><button type="button" id="zoomOutBtn" aria-label="Zoom out" title="Zoom out (−)">−</button><output id="canvasZoomLabel" aria-live="polite" aria-label="Canvas zoom level">100%</output><button type="button" id="zoomInBtn" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" id="fitCanvasBtn" class="fit-view" title="Fit artboard (0)">Fit</button></div><div class="canvas-legend"><span><i></i> Cap / x-height</span><span><i class="baseline-key"></i> Baseline</span></div><span class="canvas-units" id="canvasWidthLabel">560 advance · 1000 em</span></div>
+      <p class="canvas-note" id="canvasNote">V move · A anchors · P pen · B draw · +/− zoom · 0 fit · Space + drag to pan</p>
       </div><div class="inspector"><div class="layers-panel">
         <span class="layers-panel-title">LAYERS</span>
         <div class="layer-row" id="layerDrawingRow">
@@ -490,9 +499,16 @@
   var needsInkRedraw = false;
   var emScale = 1;
   var canvasGridVisible = true, canvasGuidesVisible = true;
+  var canvasZoom = 1, canvasFitSize = 0;
+  var ZOOM_LEVELS = [1, 1.25, 1.5, 2, 3, 4];
+  var RULER_GUTTER = 22, MAX_CANVAS_SIDE = 2560;
+  var canvasPanActive = false, spaceDown = false, panState = null;
 
   // ===================== DOM refs =====================
   var canvasWrap = document.getElementById('canvasWrap');
+  var canvasViewport = document.getElementById('canvasViewport');
+  var canvasStage = document.getElementById('canvasStage');
+  var artboardShell = document.getElementById('artboardShell');
   var guidesCanvas = document.getElementById('guidesCanvas');
   var refCanvas = document.getElementById('refCanvas');
   var inkCanvas = document.getElementById('inkCanvas');
@@ -942,10 +958,88 @@
     ref.ix = (fw - iw) / 2; ref.iy = (fh - ih) / 2; ref.iw = iw; ref.ih = ih;
   }
 
+  // ===================== Canvas view: zoom never changes font-space geometry =====================
+  function canvasFitDimension(width, height, padding){
+    return Math.max(1, Math.min(width, height) - padding * 2 - RULER_GUTTER);
+  }
+  function canvasInteractionActive(){ return !!(isDrawing || isPlacingAnchor || isClosingPath || dragState || panState); }
+  function nextCanvasZoom(direction){
+    var index = ZOOM_LEVELS.indexOf(canvasZoom);
+    return ZOOM_LEVELS[clamp(index + direction, 0, ZOOM_LEVELS.length - 1)];
+  }
+  function refreshCanvasViewControls(){
+    document.getElementById('canvasZoomLabel').textContent = Math.round(canvasZoom * 100) + '%';
+    document.getElementById('zoomOutBtn').disabled = canvasZoom <= ZOOM_LEVELS[0];
+    document.getElementById('zoomInBtn').disabled = canvasZoom >= ZOOM_LEVELS[ZOOM_LEVELS.length-1];
+    document.getElementById('panToggle').setAttribute('aria-pressed', String(canvasPanActive));
+    canvasViewport.classList.toggle('is-panning', canvasPanActive || spaceDown);
+  }
+  function layoutCanvasView(zoom, fit){
+    var oldRect = canvasWrap.getBoundingClientRect(), viewportRect = canvasViewport.getBoundingClientRect();
+    var centerX = viewportRect.left + canvasViewport.clientWidth / 2;
+    var centerY = viewportRect.top + canvasViewport.clientHeight / 2;
+    var ratioX = oldRect.width ? (centerX - oldRect.left) / oldRect.width : .5;
+    var ratioY = oldRect.height ? (centerY - oldRect.top) / oldRect.height : .5;
+    var padding = parseFloat(getComputedStyle(canvasStage).paddingLeft) || 0;
+    canvasFitSize = canvasFitDimension(canvasViewport.clientWidth, canvasViewport.clientHeight, padding);
+    canvasZoom = clamp(zoom, ZOOM_LEVELS[0], ZOOM_LEVELS[ZOOM_LEVELS.length-1]);
+    artboardShell.style.width = (canvasFitSize * canvasZoom + RULER_GUTTER) + 'px';
+    resizeCanvases();
+    if (fit){ canvasViewport.scrollLeft = 0; canvasViewport.scrollTop = 0; }
+    else {
+      var newRect = canvasWrap.getBoundingClientRect();
+      canvasViewport.scrollLeft += newRect.left + ratioX * newRect.width - centerX;
+      canvasViewport.scrollTop += newRect.top + ratioY * newRect.height - centerY;
+    }
+    refreshCanvasViewControls();
+  }
+  function setCanvasZoom(zoom, fit){
+    if (canvasInteractionActive()) return;
+    layoutCanvasView(zoom, !!fit);
+  }
+  function updateCanvasFit(){
+    if (canvasInteractionActive()) return;
+    var padding = parseFloat(getComputedStyle(canvasStage).paddingLeft) || 0;
+    var size = canvasFitDimension(canvasViewport.clientWidth, canvasViewport.clientHeight, padding);
+    if (Math.abs(size - canvasFitSize) > .5) layoutCanvasView(canvasZoom, canvasZoom === 1);
+  }
+  function finishCanvasPan(e){
+    if (!panState || (e && e.pointerId !== panState.pointerId)) return;
+    var pointerId = panState.pointerId;
+    panState = null; canvasViewport.classList.remove('is-dragging');
+    if (canvasViewport.hasPointerCapture(pointerId)) canvasViewport.releasePointerCapture(pointerId);
+    refreshCanvasViewControls(); updateCanvasFit();
+  }
+  canvasViewport.addEventListener('pointerdown', function(e){
+    if (!(e.button === 1 || (e.button === 0 && (spaceDown || canvasPanActive)))) return;
+    if (canvasInteractionActive()) return;
+    e.preventDefault(); e.stopPropagation();
+    canvasViewport.focus({preventScroll:true});
+    panState = {pointerId:e.pointerId, x:e.clientX, y:e.clientY, left:canvasViewport.scrollLeft, top:canvasViewport.scrollTop};
+    canvasViewport.setPointerCapture(e.pointerId); canvasViewport.classList.add('is-dragging');
+  }, true);
+  canvasViewport.addEventListener('pointermove', function(e){
+    if (!panState || e.pointerId !== panState.pointerId) return;
+    e.preventDefault(); e.stopPropagation();
+    canvasViewport.scrollLeft = panState.left - (e.clientX - panState.x);
+    canvasViewport.scrollTop = panState.top - (e.clientY - panState.y);
+  }, true);
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(type){
+    canvasViewport.addEventListener(type, function(e){
+      if (!panState || e.pointerId !== panState.pointerId) return;
+      e.stopPropagation(); finishCanvasPan(e);
+    }, true);
+  });
+  document.getElementById('zoomOutBtn').addEventListener('click',function(){ setCanvasZoom(nextCanvasZoom(-1)); });
+  document.getElementById('zoomInBtn').addEventListener('click',function(){ setCanvasZoom(nextCanvasZoom(1)); });
+  document.getElementById('fitCanvasBtn').addEventListener('click',function(){ setCanvasZoom(1, true); });
+  document.getElementById('panToggle').addEventListener('click',function(){ canvasPanActive=!canvasPanActive; refreshCanvasViewControls(); });
+
   // ===================== Canvas setup =====================
   function setupCanvasResolution(canvas){
     var rect = canvasWrap.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
+    // Bound the three backing buffers at high zoom/DPR without changing CSS-space math.
+    var dpr = Math.min(window.devicePixelRatio || 1, MAX_CANVAS_SIDE / Math.max(1, rect.width));
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
     var ctx = canvas.getContext('2d');
@@ -976,7 +1070,7 @@
     var gWidth = glyphs[activeChar].width, rightPx = unitToPxX(gWidth);
     guidesCtx.clearRect(0, 0, w, h);
     if (canvasGridVisible){
-      guidesCtx.fillStyle = 'rgba(100,98,136,0.2)';
+      guidesCtx.fillStyle = 'rgba(100,98,136,0.14)';
       for (var u = 0; u <= 1000; u += 50){
         for (var v = -200; v <= 800; v += 50){
           guidesCtx.fillRect(unitToPxX(u)-.5, unitToPxY(v)-.5, 1, 1);
@@ -984,11 +1078,11 @@
       }
     }
     if (!canvasGuidesVisible) return;
-    guidesCtx.fillStyle = 'rgba(112,99,165,0.035)';
+    guidesCtx.fillStyle = 'rgba(112,99,165,0.055)';
     guidesCtx.fillRect(rightPx,0,Math.max(0,w-rightPx),h);
     var capY=unitToPxY(CAP_HEIGHT), xY=unitToPxY(X_HEIGHT), baseY=unitToPxY(BASELINE);
-    drawDashedHLine(guidesCtx, capY, 0, w, 'rgba(133,111,199,0.45)');
-    drawDashedHLine(guidesCtx, xY, 0, w, 'rgba(133,111,199,0.3)');
+    drawDashedHLine(guidesCtx, capY, 0, w, 'rgba(133,111,199,0.32)');
+    drawDashedHLine(guidesCtx, xY, 0, w, 'rgba(133,111,199,0.22)');
     guidesCtx.save(); guidesCtx.strokeStyle='rgba(85,87,113,0.6)'; guidesCtx.lineWidth=1;
     guidesCtx.beginPath(); guidesCtx.moveTo(0,baseY); guidesCtx.lineTo(w,baseY); guidesCtx.stroke(); guidesCtx.restore();
     drawDashedVLine(guidesCtx,rightPx,0,h,'rgba(117,101,173,0.4)');
@@ -1082,7 +1176,7 @@
           ctx.strokeStyle = PEN_GUIDE_COLOR; ctx.lineWidth = 1;
         }
         ctx.beginPath(); ctx.arc(px, py, isFirst && nearClose ? 4 : 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        drawAnchorHandles(ctx, a, false);
+        if (!(selectedObject && selectedObject.mark === inProgressPen && selectedObject.showAnchors) && (idx === anchors.length - 1 || (isClosingPath && idx === 0))) drawAnchorHandles(ctx, a, false);
 
       });
     }
@@ -1163,7 +1257,7 @@
     ctx.save(); ctx.lineWidth = 1.3; ctx.strokeStyle = SELECT_COLOR;
     selectedObject.mark.anchors.forEach(function(a, index){
       var active = index === selectedAnchorIndex;
-      drawAnchorHandles(ctx, a, active);
+      if (active) drawAnchorHandles(ctx, a, true);
       var px = unitToPxX(a.x), py = unitToPxY(a.y), size = active ? 8 : 6;
       ctx.fillStyle = active ? '#4A63C9' : '#fff';
       ctx.fillRect(px-size/2, py-size/2, size, size); ctx.strokeRect(px-size/2, py-size/2, size, size);
@@ -1204,7 +1298,7 @@
       var marks = glyphs[activeChar].marks;
       for (var i = marks.length - 1; i >= 0; i--){
         var m = marks[i];
-        if (m.type === 'pen' && pointInPolygon(fontPos, flattenPenAnchors(m.anchors))) return { type: 'pen', mark: m };
+        if (m.type === 'pen' && (pointInPolygon(fontPos, flattenPenAnchors(m.anchors)) || (!includeRef && hitTestBezierEdge([clientX-rect.left,clientY-rect.top],m.anchors,6)))) return { type: 'pen', mark: m };
       }
     }
     if (includeRef){
@@ -1217,30 +1311,36 @@
     return null;
   }
   // Anchor/handle hit-testing only valid when showAnchors is true
+  function nearestCanvasPoint(clientPos, candidates, radius){
+    var best = null, bestDistance = radius;
+    candidates.forEach(function(candidate){
+      var distance = Math.hypot(clientPos[0]-candidate.x, clientPos[1]-candidate.y);
+      if (distance <= bestDistance && (!best || distance < bestDistance)){
+        bestDistance=distance; best=Object.assign({},candidate,{distance:distance});
+      }
+    });
+    return best;
+  }
   function hitTestAnchor(clientPos){
     if (!selectedObject || selectedObject.type !== 'pen' || !selectedObject.showAnchors) return null;
-    var anchors = selectedObject.mark.anchors;
-    for (var i = 0; i < anchors.length; i++){
-      var px = unitToPxX(anchors[i].x), py = unitToPxY(anchors[i].y);
-      if (Math.hypot(clientPos[0] - px, clientPos[1] - py) <= 9) return { anchorIndex: i };
-    }
-    return null;
+    return nearestCanvasPoint(clientPos, selectedObject.mark.anchors.map(function(a,index){
+      return {x:unitToPxX(a.x),y:unitToPxY(a.y),anchorIndex:index};
+    }),9);
   }
   function hitTestHandleDot(clientPos){
-    if (!selectedObject || selectedObject.type !== 'pen' || !selectedObject.showAnchors) return null;
-    var anchors = selectedObject.mark.anchors;
-    for (var i = 0; i < anchors.length; i++){
-      var a = anchors[i];
-      if (a.handleOut){
-        var px = unitToPxX(a.x + a.handleOut[0]), py = unitToPxY(a.y + a.handleOut[1]);
-        if (Math.hypot(clientPos[0] - px, clientPos[1] - py) <= 8) return { anchorIndex: i, isOutHandle: true };
-      }
-      if (a.handleIn){
-        var px2 = unitToPxX(a.x + a.handleIn[0]), py2 = unitToPxY(a.y + a.handleIn[1]);
-        if (Math.hypot(clientPos[0] - px2, clientPos[1] - py2) <= 8) return { anchorIndex: i, isOutHandle: false };
-      }
-    }
-    return null;
+    var a=activeAnchor();
+    if (!a) return null;
+    var candidates=[];
+    ['handleIn','handleOut'].forEach(function(side){
+      var v=a[side];
+      if (v) candidates.push({x:unitToPxX(a.x+v[0]),y:unitToPxY(a.y+v[1]),anchorIndex:selectedAnchorIndex,isOutHandle:side==='handleOut'});
+    });
+    return nearestCanvasPoint(clientPos,candidates,8);
+  }
+  function hitTestEditPoint(clientPos){
+    var anchor=hitTestAnchor(clientPos), handle=hitTestHandleDot(clientPos);
+    if (anchor && (!handle || anchor.distance <= handle.distance)) return {kind:'anchor',hit:anchor};
+    return handle ? {kind:'handle',hit:handle} : null;
   }
   // Unified selection setter — showAnchors=false for Move tool, true for Direct Select
   function setSelected(hit, showAnchors){
@@ -1592,14 +1692,15 @@
     var so = selectedObject;
     // pen: anchor/handle reshape takes highest priority
     if (so.type === 'pen'){
-      var handleHit = hitTestHandleDot(clientPos);
+      var editHit = hitTestEditPoint(clientPos);
+      var handleHit = editHit && editHit.kind === 'handle' ? editHit.hit : null;
       if (handleHit){
         selectedAnchorIndex = handleHit.anchorIndex; prepareAnchorHistory(); needsInkRedraw=true;
         var opposite = so.mark.anchors[handleHit.anchorIndex][handleHit.isOutHandle ? 'handleIn' : 'handleOut'];
         dragState = { mode: 'handle-drag', anchorIndex: handleHit.anchorIndex, isOutHandle: handleHit.isOutHandle, oppositeLength: opposite ? Math.hypot(opposite[0],opposite[1]):0, didMove: false };
         inkCanvas.style.cursor = 'crosshair'; return;
       }
-      var anchorHit = hitTestAnchor(clientPos);
+      var anchorHit = editHit && editHit.kind === 'anchor' ? editHit.hit : null;
       if (anchorHit){
         selectedAnchorIndex=anchorHit.anchorIndex; prepareAnchorHistory(); needsInkRedraw=true;
         var ah = so.mark.anchors[anchorHit.anchorIndex];
@@ -1736,8 +1837,8 @@
   function updateHoverCursor(clientPos){
     if (!selectedObject || dragState) return;
     if (selectedObject.type === 'pen'){
-      if (hitTestHandleDot(clientPos)){ inkCanvas.style.cursor = 'crosshair'; return; }
-      if (hitTestAnchor(clientPos)){ inkCanvas.style.cursor = altDown ? 'crosshair' : 'move'; return; }
+      var editHit=hitTestEditPoint(clientPos);
+      if (editHit){ inkCanvas.style.cursor=editHit.kind==='handle' || altDown ? 'crosshair':'move'; return; }
       if (selectedObject.showAnchors){ inkCanvas.style.cursor='default'; return; }
     }
     var bbox = selectedBBox();
@@ -1753,7 +1854,9 @@
   }
 
   inkCanvas.addEventListener('pointerdown', function(e){
+    if (e.button !== 0) return;
     e.preventDefault();
+    canvasViewport.focus({preventScroll:true});
     altDown=e.altKey; shiftDown=e.shiftKey;
     inkCanvas.setPointerCapture(e.pointerId);
     var rect = inkCanvas.getBoundingClientRect();
@@ -1846,10 +1949,11 @@
   function pointerEnd(){
     if (selectedObject){
       if (dragState && dragState.didMove && selectedObject.type === 'pen') commitAnchorEdit();
-      dragState = null; return;
+      dragState = null; updateCanvasFit(); return;
     }
     if (currentMode === 'freehand') freehandFinish();
     else if (currentMode === 'pen') penPointerUp(); // handles both isClosingPath and isPlacingAnchor
+    updateCanvasFit();
   }
   inkCanvas.addEventListener('pointerup', pointerEnd);
   inkCanvas.addEventListener('pointercancel', pointerEnd);
@@ -1865,6 +1969,7 @@
   var IN_PROGRESS_NOTE = 'Adjusting in-progress path. Drag anchors or handles. Press P to resume drawing from the last anchor.';
 
   function applyMode(mode){
+    canvasPanActive=false; refreshCanvasViewControls();
     var prevMode = currentMode;
     currentMode = mode;
     modeGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === mode); });
@@ -1876,6 +1981,7 @@
     // keep the path alive and auto-select it so anchors are editable
     if (mode === 'select' && inProgressPen && inProgressPen.anchors.length > 0){
       selectedObject = { type: 'pen', mark: inProgressPen, showAnchors: true };
+      selectedAnchorIndex=inProgressPen.anchors.length-1;
       canvasNote.textContent = IN_PROGRESS_NOTE;
       canvasNote.classList.add('active-hint');
     }
@@ -2027,7 +2133,7 @@
     var tag = (e.target && e.target.tagName) || '';
     var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     var ctrlKey = isMac ? e.metaKey : e.ctrlKey;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
     var key = e.key.toLowerCase();
     if (ctrlKey && !e.shiftKey && key === 'z'){
       e.preventDefault(); deselectObject();
@@ -2041,6 +2147,12 @@
       e.preventDefault(); deselectObject(); redoChar(); return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === ' ' && tag !== 'BUTTON' && !(e.target.closest && e.target.closest('[role="button"], summary'))){
+      e.preventDefault(); spaceDown=true; refreshCanvasViewControls(); return;
+    }
+    if (e.key === '+' || e.key === '='){ e.preventDefault(); setCanvasZoom(nextCanvasZoom(1)); return; }
+    if (e.key === '-'){ e.preventDefault(); setCanvasZoom(nextCanvasZoom(-1)); return; }
+    if (e.key === '0'){ e.preventDefault(); setCanvasZoom(1,true); return; }
     // tool shortcuts
     if (e.key === 'v' || e.key === 'V'){
       if (selectedObject && selectedObject.mark !== inProgressPen) deselectObject();
@@ -2077,6 +2189,7 @@
       needsInkRedraw = true; return;
     }
     if (e.key === 'Escape'){
+      if (canvasPanActive || spaceDown || panState){ canvasPanActive=false; spaceDown=false; finishCanvasPan(); refreshCanvasViewControls(); return; }
       if (selectedObject) deselectObject();
       else if (inProgressPen) cancelInProgressPen();
       return;
@@ -2087,11 +2200,12 @@
     }
   });
   document.addEventListener('keyup', function(e){
+    if (e.key === ' '){ spaceDown=false; refreshCanvasViewControls(); }
     if (!e.altKey) altDown = false;
     if (!e.shiftKey) shiftDown = false;
   });
 
-  window.addEventListener('blur', function(){ altDown=false; shiftDown=false; });
+  window.addEventListener('blur', function(){ altDown=false; shiftDown=false; spaceDown=false; finishCanvasPan(); refreshCanvasViewControls(); });
 
   // ===================== Tools: weight, width, undo, clear =====================
   weightGroup.querySelectorAll('.icon-btn').forEach(function(opt){
@@ -2313,10 +2427,10 @@
   weightGroup.style.display = 'none'; // move mode has no weight group
   syncToolAccessibility();
 
-  var ro = new ResizeObserver(function(){ resizeCanvases(); });
-  ro.observe(canvasWrap);
-  window.addEventListener('resize', resizeCanvases);
-  resizeCanvases();
+  var ro = new ResizeObserver(function(){ updateCanvasFit(); });
+  ro.observe(canvasViewport);
+  window.addEventListener('resize', function(){ updateCanvasFit(); resizeCanvases(); });
+  layoutCanvasView(1, true);
 
 })();
 </script>

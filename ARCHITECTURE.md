@@ -12,12 +12,12 @@ The future commercialization layer will wrap the drawing engine in an authentica
 
 - **Presentation:** responsive neutral panels and blue–violet controls, with an artboard, external rulers, character grid, layers, anchor inspector, and live type tester.
 - **Rendering:** three stacked canvases for guides, the reference image, and ink. Grid and Guides toggle only the guide canvas; they do not change outlines or exports.
-- **Coordinates:** 1000 units/em; ascender 800, descender −200, cap height 700, x-height 500, baseline 0. Canvas coordinates use `x × emScale` and `(800 − y) × emScale`. Rulers are DOM elements outside the drawing surface.
+- **Coordinates:** 1000 units/em; ascender 800, descender −200, cap height 700, x-height 500, baseline 0. Canvas coordinates use `x × emScale` and `(800 − y) × emScale`. Rulers are DOM elements outside the drawing surface. Zoom resizes the artboard in a scrollable viewport and recomputes `emScale`; pointer positions use the current canvas bounding rectangle, including scroll. View operations do not transform glyph data. Each display canvas backing buffer is capped at 2560 px per side independently of export resolution.
 - **Glyphs:** 62 characters (`0–9`, `A–Z`, `a–z`), each with marks, advance width, and reference-placement settings. A reference image is shared while placement is tracked per glyph. Advance widths are clamped to 150–900 units in steps of 10.
 - **Bézier anchors:** absolute `x`/`y` positions plus relative `handleIn`/`handleOut` vectors. Optional `handleMode` records smooth, symmetric, independent, or corner behavior; legacy anchors infer continuity from their vectors. Incoming/outgoing refer to path direction.
 - **History:** per-glyph snapshots copy marks and optional unfinished paths. Anchor edits retain handle modes; open-path edits preserve before/after snapshots for undo.
 - **Export:** marching-squares contour tracing and winding correction feed opentype.js CFF/OTF generation. FontFace supplies the live preview; the preview size control affects display only.
-- **Validation:** `node --test tests/pen-controls.test.cjs` exercises geometry and editing behavior. Browser rendering, pointer interactions, and font downloads require separate manual verification.
+- **Validation:** `node --test tests/*.test.cjs` exercises geometry and editing behavior. Browser rendering, pointer interactions, and font downloads require separate manual verification.
 
 See [docs/EDITOR_GUIDE.md](docs/EDITOR_GUIDE.md) for the user workflow.
 

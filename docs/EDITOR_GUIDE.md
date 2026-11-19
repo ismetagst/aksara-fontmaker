@@ -15,7 +15,7 @@ At least one glyph must contain a mark before export. Characters that have not b
 
 ## Canvas and guides
 
-The white artboard sits inside a neutral studio surface. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
+The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
 
 | Measurement | Value |
 | --- | --- |
@@ -35,13 +35,24 @@ Font Y coordinates increase upward. The artboard's top-left is `(0, 800)`, and i
 - The dot grid is visual guidance; it does not snap anchors to grid points.
 - These display controls affect neither drawing coordinates nor exported outlines. The rulers remain visible when the grid or guides are hidden.
 
+### Zoom and pan
+
+- Use **+** / **−** beside the zoom percentage, or the keyboard's plus/minus keys, to move through 100%, 125%, 150%, 200%, 300%, and 400%.
+- **100%** means the full artboard fitted to the available viewport, not one font unit per screen pixel. Use **Fit** or **0** to restore this view and reset scrolling.
+- Zoom preserves the glyph position at the viewport center where the scroll bounds allow. It changes the rendered scale, not glyph coordinates, stroke widths in font units, history, or export geometry.
+- To navigate a magnified artboard, enable **Pan**, hold **Space + drag**, use the middle mouse button, or use the scrollbars. Panning does not add marks or move anchors.
+- Selecting a drawing tool exits the persistent Pan mode. Escape exits Pan before deselecting a shape.
+- Zoom changes wait until an active stroke, anchor placement, transform, or pan has ended. Font-unit rulers remain attached to the artboard when zooming.
+
+The rendering buffers are capped at 2560 px per canvas side to limit memory use on high-DPI displays at maximum zoom. This display limit does not change font export resolution.
+
 ## Draw and edit a Bézier path
 
 Press **P**. Click to add a corner, or click-drag to create a curved anchor with two mirrored handles. Add at least three anchors before closing the shape.
 
 Hover over the first anchor to see the violet closing indicator. Click to close, or drag from the first anchor to set its closing curve before releasing. Clicking the last anchor removes its outgoing handle so the next segment can change direction.
 
-Press **A** to edit an unfinished path; press **P** to resume it. For completed shapes, press **A**, click the shape, and then click an anchor. The active anchor is filled, and the inspector shows its coordinates and handles.
+Press **A** to edit an unfinished path; press **P** to resume it. For completed shapes, press **A**, click the shape, and then click an anchor. The active anchor is filled, and the inspector shows its coordinates and handles. Only that anchor’s handles appear during anchor editing; the other anchors remain visible. When points are close together, the nearest point within the screen-pixel hit radius is selected. Completed contours can also be selected along their edge with Anchors mode.
 
 The handles follow **path direction**, not fixed screen left/right:
 
@@ -98,6 +109,9 @@ Drawing and Reference have separate visibility and lock controls. The Drawing la
 | Anchor selection and editing | A |
 | Pen | P |
 | Freehand | B |
+| Canvas zoom | + / − |
+| Fit artboard | 0 |
+| Pan canvas | Space+drag, middle mouse, or Pan button |
 | Undo | Cmd/Ctrl+Z |
 | Redo | Cmd/Ctrl+Shift+Z; Ctrl+Y on Windows/Linux |
 | Nudge selected anchor or shape | Arrow keys |
@@ -121,8 +135,8 @@ Export generates an installable `.otf` font through opentype.js. That library lo
 
 ## Validation and limits
 
-Run `node --test tests/pen-controls.test.cjs` from the repository root. The tests check handle continuity, independent edits, angle constraints, copies, open-path snapshots, and curve-preserving insertion.
+Run `node --test tests/*.test.cjs` from the repository root. The tests check handle continuity, independent edits, angle constraints, copies, open-path snapshots, and curve-preserving insertion.
 
-Manual browser checks should also cover drawing and dragging, responsive layout, Grid/Guides toggles, reference upload, live preview, and installation of an exported font. Passing geometry tests alone does not verify those browser flows.
+Manual browser checks should also cover drawing and dragging at multiple zoom levels, pan without marks, Fit, responsive layout, Grid/Guides toggles, reference upload, live preview, and installation of an exported font. See the [canvas review](CANVAS_REVIEW.md) for decisions and verification limits. Passing geometry tests alone does not verify those browser flows.
 
 Current limits include the 62-character set, browser-memory storage, and the external font-building dependency. There are no account, autosave, payment, or credit gates in the standalone editor.

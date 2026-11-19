@@ -4,6 +4,16 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Canvas usability
+
+- Expanded the artboard to fit its viewport and reduced competing background patterns and guide contrast.
+- Added 100–400% zoom, Fit, keyboard shortcuts, and pan using a hand toggle, Space-drag, or middle mouse.
+- Kept glyph geometry, font coordinates, and export resolution independent of zoom and scroll; capped display buffers for memory use.
+- Selected the nearest editable point and showed handles only for the active anchor during anchor editing.
+- Added contour-edge selection in Anchors mode, preserved native field/button shortcuts, and prevented right/middle clicks from adding marks.
+- Added tests for canvas coordinates, zoom anchoring, pan input routing, fit/resize, rendering bounds, and dense-point selection.
+
+
 ### Favicon and search metadata
 
 - Added a violet A-monogram favicon in SVG, PNG, and ICO formats, plus Apple and application icons.

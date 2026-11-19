@@ -12,6 +12,7 @@ The standalone drawing editor (`index.html`) is available now. The commerce phas
 - [x] Reference image upload, placement, visibility, lock, and opacity controls
 - [x] Responsive studio redesign with blue–violet accents and neutral panels
 - [x] Artboard rulers, guide labels, advance-width boundary, and Grid/Guides toggles
+- [x] Fit-to-viewport canvas, 100–400% zoom, hand/Space/middle-mouse panning, and nearest-point selection
 - [x] Live type tester with size control, drawing progress, and OTF download
 - [x] Resenarasi Instagram footer link with bold hover styling
 - [x] Node.js tests for anchor geometry and history behavior

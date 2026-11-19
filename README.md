@@ -34,7 +34,7 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 **Interface**
 - Responsive studio interface with a blue–violet accent and neutral panels
 - White artboard with external coordinate rulers, cap-height / x-height / baseline labels, and advance-width boundary
-- Independent Grid and Guides display toggles; changing their visibility does not alter the glyph
+- Independent Grid and Guides toggles, 100–400% canvas zoom, Fit, and hand panning; view changes do not alter the glyph
 - Labeled tools, selected-anchor inspector, and Drawing / Reference layer controls
 - Live type tester with editable text and a 24–120 px size control
 - Keyboard-accessible tool buttons, active/disabled states, and drawing progress
@@ -88,7 +88,7 @@ Press **A**, select a pen shape, then click an anchor. Its handles are labeled *
 - **Shift-drag a handle:** constrain its angle to 45° increments.
 - Use the anchor panel for exact X/Y positions and IN/OUT offsets in font units. Arrow keys move the selected anchor; without a selected anchor, they move the selected shape. Edits support undo/redo, including unfinished paths.
 
-Run the pen geometry checks with `node --test tests/pen-controls.test.cjs`.
+Run the pen geometry checks with `node --test tests/*.test.cjs`.
 
 **Add anchor to existing shape:**
 With the Pen tool active and no path in progress, click directly on the edge of any filled shape. A new anchor is inserted at that exact point using de Casteljau subdivision — the curve does not change shape.
@@ -135,7 +135,8 @@ aksara-fontmaker/
 ├── CHANGELOG.md
 ├── LICENSE
 ├── tests/
-│   └── pen-controls.test.cjs   # Node.js geometry and anchor behavior checks
+│   ├── pen-controls.test.cjs   # Anchor geometry and editing behavior
+│   └── canvas-view.test.cjs    # Zoom, pan, coordinates, and point selection
 └── docs/
     ├── EDITOR_GUIDE.md
     ├── CREDIT_SYSTEM.md
@@ -152,10 +153,10 @@ aksara-fontmaker/
 Run the geometry and anchor behavior checks with Node.js:
 
 ```bash
-node --test tests/pen-controls.test.cjs
+node --test tests/*.test.cjs
 ```
 
-These tests cover handle modes, modifier constraints, transform copies, open-path history snapshots, and curve-preserving anchor insertion. They do not replace browser checks for rendering, pointer interactions, image upload, live preview, or `.otf` download.
+These tests cover handle modes, modifier constraints, transform copies, open-path history snapshots, curve-preserving insertion, zoom/coordinate invariance, pan input handling, and nearest-point selection. They do not replace browser checks for rendering, pointer interactions, image upload, live preview, or `.otf` download.
 
 See [CHANGELOG.md](CHANGELOG.md) for the editor updates.
 
