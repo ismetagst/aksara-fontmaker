@@ -11,6 +11,8 @@ test('vertical toolbar keeps artboard beside tools and settings out of the canva
   for(const selector of ['#modeGroup','#panToggle','#undoBtn','#redoBtn','#clearBtn','#uploadRefBtn']) assert.ok(e.get(selector).closest('.tool-rail'),selector);
   for(const selector of ['#widthInput','#weightGroup','#penActionsGroup','#refControls']) assert.ok(e.get(selector).closest('.inspector'),selector);
   assert.ok(e.get('#currentCharLabel').closest('.editor-heading'));
+  for(const button of e.document.querySelectorAll('.tool-rail button')){assert.ok(button.getAttribute('aria-label'));assert.ok(button.dataset.tooltip);assert.equal(button.querySelector('.tool-name,.tool-shortcut,.rail-name'),null);}
+  const tool=e.get('[data-mode="pen"]');tool.focus();await e.key('Escape');assert.equal(tool.classList.contains('tooltip-dismissed'),true);tool.blur();assert.equal(tool.classList.contains('tooltip-dismissed'),false);
   assert.equal(e.get('#undoBtn').disabled,true);assert.equal(e.get('#refControls').style.display,'none');
   await e.click('[data-mode="freehand"]');assert.notEqual(e.get('#weightGroup').style.display,'none');
   await e.click('[data-mode="pen"]');assert.equal(e.get('#weightGroup').style.display,'none');assert.notEqual(e.get('#penActionsGroup').style.display,'none');

@@ -15,7 +15,7 @@ At least one glyph must contain a mark before export. Characters that have not b
 
 ## Canvas and guides
 
-The white artboard sits beside a vertical tool rail, directly below the compact Glyph editor heading. Move, Anchors, Draw, Pen, Pan, history, clear, and reference upload live in the rail. Width, tool-specific options, reference controls, layers, and anchor properties live in the inspector. The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
+The white artboard sits beside a vertical tool rail, directly below the compact Glyph editor heading. Move, Anchors, Draw, Pen, Pan, history, clear, and reference upload live in the compact icon-only rail. Hover or focus a tool to see its name and shortcut; Escape dismisses the tooltip. Accessible button names remain available to screen readers. Width, tool-specific options, reference controls, layers, and anchor properties live in the inspector. The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
 
 | Measurement | Value |
 | --- | --- |
@@ -27,11 +27,13 @@ The white artboard sits beside a vertical tool rail, directly below the compact 
 | Descender / artboard bottom | −200 |
 | Horizontal artboard span | 0–1000 |
 
+The cap-height and x-height values are Aksara’s current presets, not universal proportions required for every typeface. These guides help keep glyph heights consistent; they do not crop outlines.
+
 Font Y coordinates increase upward. The artboard's top-left is `(0, 800)`, and its bottom-left is `(0, −200)`.
 
 - **Grid** shows or hides the 50-unit dot grid.
 - **Guides** shows or hides the cap-height, x-height, baseline, and advance-width boundary, together with the area beyond that boundary.
-- The advance-width readout follows the active glyph. **Width** accepts 150–900 units and rounds to steps of 10.
+- The vertical **ADV** line is the advance width: where the next character begins, not a clipping edge. Ink may extend beyond it. The advance-width readout follows the active glyph. **Width** accepts 150–900 units and rounds to steps of 10.
 - The dot grid is visual guidance; it does not snap anchors to grid points.
 - These display controls affect neither drawing coordinates nor exported outlines. The rulers remain visible when the grid or guides are hidden.
 

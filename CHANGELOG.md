@@ -4,6 +4,13 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Compact tools and guide clarity
+
+- Reduced the desktop tool rail from 64 to 48 px and tool icons from 18 to 16 px; removed visible tool text in favor of hover/focus tooltips and accessible names.
+- Added Escape dismissal for tooltips while preserving keyboard tool activation.
+- Clarified the visual-only grid and guide functions in tooltips, renamed the width control to Advance width, and labeled its canvas boundary ADV.
+
+
 ### Vertical tools and workflow validation
 
 - Replaced horizontal toolbar rows with a labeled vertical tool rail beside the artboard; moved glyph navigation into the compact editor heading.
