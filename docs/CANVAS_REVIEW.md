@@ -23,12 +23,18 @@ The viewport captures Pan input before it reaches drawing handlers. A normal pri
 Run:
 
 ```bash
-node --test tests/*.test.cjs
+node --test tests/pen-controls.test.cjs tests/canvas-view.test.cjs
 ```
 
 The suite covers anchor continuity and insertion plus coordinate round trips at each zoom, view-center preservation, Fit, responsive recalculation, zoom limits and interaction guards, display-buffer bounds, nearest-point selection, active-handle visibility, pan event routing, and native keyboard behavior.
 
 Browser automation was unavailable during this review. These automated checks exercise the implementation with simulated canvas/viewport geometry and input events; they do not establish visual quality or device compatibility.
+
+## Vertical toolbar and workflow follow-up
+
+The two horizontal tool rows have been replaced with a vertical rail sharing the canvas row. Character navigation is in the compact heading; width, freehand weight, pen actions, and reference controls are in the inspector. This removes tool rows above the artboard.
+
+Full-editor integration tests now execute the unmodified editor script using a DOM, actual native Canvas rendering, and OpenType generation/parsing. They found and now prevent drawing into a hidden layer, validate corrupt reference handling, and check hole preservation in exported contours. These extend the geometry tests without replacing browser layout or touch/stylus verification. See [TESTING.md](TESTING.md).
 
 ## Manual browser checklist
 

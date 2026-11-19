@@ -1269,10 +1269,10 @@
         else if (m.type === 'pen') drawPenShapeFilled(inkCtx, m.anchors);
       });
     }
-    if (currentMode === 'freehand' && currentStroke && !drawingLayerLocked) drawFreehandStroke(inkCtx, currentStroke);
+    if (currentMode === 'freehand' && currentStroke && drawingLayerVisible && !drawingLayerLocked) drawFreehandStroke(inkCtx, currentStroke);
     // Always render in-progress pen path regardless of current tool —
     // pass pendingAnchor only when actively drawing (pen mode), null otherwise
-    if (inProgressPen && !drawingLayerLocked){
+    if (inProgressPen && drawingLayerVisible && !drawingLayerLocked){
       drawPenPreview(inkCtx, inProgressPen, (currentMode === 'pen') ? pendingAnchor : null);
     }
     drawTransformOverlay(inkCtx);
@@ -1914,7 +1914,7 @@
         if (hitD){ retroactivelyUndoLastClick(); setSelected(hitD, true); lastClickTime = 0; return; }
       }
     }
-    if (drawingLayerLocked) return; // locked: block drawing
+    if (drawingLayerLocked || !drawingLayerVisible) return; // hidden or locked layers cannot receive drawing input
     if (currentMode === 'freehand') freehandPointerDown(e);
     else penPointerDown(e);
   });
@@ -1971,7 +1971,7 @@
 
     // Switching TO Direct Select (A) while a pen path is in progress:
     // keep the path alive and auto-select it so anchors are editable
-    if (mode === 'select' && inProgressPen && inProgressPen.anchors.length > 0){
+    if (mode === 'select' && drawingLayerVisible && !drawingLayerLocked && inProgressPen && inProgressPen.anchors.length > 0){
       selectedObject = { type: 'pen', mark: inProgressPen, showAnchors: true };
       selectedAnchorIndex=inProgressPen.anchors.length-1;
       canvasNote.textContent = IN_PROGRESS_NOTE;
@@ -2243,6 +2243,7 @@
   refFileInput.addEventListener('change', function(e){
     var file = e.target.files && e.target.files[0];
     if (!file) return;
+    if (file.type && file.type.indexOf('image/') !== 0){ showStatus('Choose an image file for the reference.'); refFileInput.value=''; return; }
     var reader = new FileReader();
     reader.onload = function(ev){
       var img = new Image();
@@ -2253,8 +2254,10 @@
         refreshRefUIForChar();
         drawRefLayer();
       };
-      img.src = ev.target.result;
+      img.onerror = function(){ showStatus("Couldn't load the reference image. Try another file."); };
+      try { img.src = ev.target.result; } catch (err){ img.onerror(); }
     };
+    reader.onerror = function(){ showStatus("Couldn't read the reference image. Try again."); };
     reader.readAsDataURL(file);
     refFileInput.value = '';
   });
@@ -2277,6 +2280,7 @@
     if (!refImage.img) return;
     var ref = glyphs[activeChar].ref;
     ref.active = !ref.active;
+    if (!ref.active && selectedObject && selectedObject.type === 'ref') deselectObject();
     refreshRefUIForChar();
     drawRefLayer();
   });
@@ -2298,6 +2302,7 @@
   // ===================== Layers panel =====================
   makeActionable(drawingVisBtn, function(){
     drawingLayerVisible = !drawingLayerVisible;
+    if (!drawingLayerVisible && selectedObject && selectedObject.type === 'pen') deselectObject();
     updateLayerPanel(); needsInkRedraw = true;
   });
   makeActionable(drawingLockBtn, function(){

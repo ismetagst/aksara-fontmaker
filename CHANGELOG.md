@@ -4,6 +4,16 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Vertical tools and workflow validation
+
+- Replaced horizontal toolbar rows with a labeled vertical tool rail beside the artboard; moved glyph navigation into the compact editor heading.
+- Moved glyph width, freehand weight, pen actions, and reference controls into contextual inspector panels; added reference status and numeric opacity feedback.
+- Blocked new drawing in hidden Drawing layers and cleared selections when hiding shapes or references.
+- Added reference-file validation and decode/read error handling without removing the previous reference image.
+- Added full-editor workflow tests using a DOM, real native Canvas rendering, actual OTF downloads, font parsing, and rendered counter checks.
+- Isolated development dependencies under `tests/`; the production editor remains a buildless static page.
+
+
 ### Canvas usability
 
 - Expanded the artboard to fit its viewport and reduced competing background patterns and guide contrast.

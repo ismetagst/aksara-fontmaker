@@ -6,7 +6,7 @@ This guide describes the standalone editor in [`index.html`](../index.html). For
 
 1. Open `index.html` or serve the repository using the [Quick Start](../README.md#quick-start).
 2. Select a character in **Character set**. The editor supports 62 glyphs: numbers, capitals, and lowercase Latin letters.
-3. Draw with **Pen (P)** or **Draw / Freehand (B)**. Select a stroke weight for freehand drawing.
+3. Choose **Pen (P)** or **Draw / Freehand (B)** from the vertical rail on the left. Freehand weight appears in the **Glyph settings** inspector.
 4. Adjust completed pen shapes with **Move (V)** or **Anchors (A)**.
 5. Type sample text in **Type tester**, then set its display size between 24 and 120 px.
 6. Set the font name and select **Download Font (.otf)**.
@@ -15,7 +15,7 @@ At least one glyph must contain a mark before export. Characters that have not b
 
 ## Canvas and guides
 
-The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
+The white artboard sits beside a vertical tool rail, directly below the compact Glyph editor heading. Move, Anchors, Draw, Pen, Pan, history, clear, and reference upload live in the rail. Width, tool-specific options, reference controls, layers, and anchor properties live in the inspector. The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
 
 | Measurement | Value |
 | --- | --- |
@@ -91,7 +91,7 @@ With **P** active and no unfinished path, click the edge of an existing closed p
 
 ## Reference images and layers
 
-Use **Reference → Upload** to load a scan or photo. The image is shared across glyphs; each glyph has its own reference placement and settings.
+Use **Image** in the left tool rail to load a scan or photo. The Reference inspector shows image status, visibility/lock/fit/remove actions, and the opacity value. Invalid or unreadable files report an error while keeping any previously loaded reference. The image is shared across glyphs; each glyph has its own reference placement and settings.
 
 - Use **Move (V)** to select, move, and resize an unlocked reference image.
 - Hold Shift while resizing to preserve proportions.
@@ -99,7 +99,7 @@ Use **Reference → Upload** to load a scan or photo. The image is shared across
 - Adjust opacity, visibility, or lock state using the reference controls or Layers panel.
 - **Remove image** removes the shared image from all glyphs.
 
-Drawing and Reference have separate visibility and lock controls. The Drawing layer's visibility/lock state applies across glyphs. Hiding a layer is an editing display setting and does not delete its marks. The reference image is used for tracing and is not included in font export.
+Drawing and Reference have separate visibility and lock controls. The Drawing layer's visibility/lock state applies across glyphs. Hiding a layer is an editing display setting and does not delete its marks. A hidden or locked Drawing layer cannot receive new drawing input. Hiding a selected shape or reference clears its transform selection. The reference image is used for tracing and is not included in font export.
 
 ## Keyboard shortcuts
 
@@ -135,7 +135,7 @@ Export generates an installable `.otf` font through opentype.js. That library lo
 
 ## Validation and limits
 
-Run `node --test tests/*.test.cjs` from the repository root. The tests check handle continuity, independent edits, angle constraints, copies, open-path snapshots, and curve-preserving insertion.
+Run `npm --prefix tests ci`, then `npm --prefix tests test` from the repository root (Node.js 24+). See the [testing guide](TESTING.md) for dependency-free geometry checks and integration coverage. The tests check handle continuity, independent edits, angle constraints, copies, open-path snapshots, and curve-preserving insertion.
 
 Manual browser checks should also cover drawing and dragging at multiple zoom levels, pan without marks, Fit, responsive layout, Grid/Guides toggles, reference upload, live preview, and installation of an exported font. See the [canvas review](CANVAS_REVIEW.md) for decisions and verification limits. Passing geometry tests alone does not verify those browser flows.
 
