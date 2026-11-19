@@ -58,14 +58,14 @@ Or just open `aksara-font-maker.html` directly in any modern browser (Chrome, Fi
 2. Click        → corner anchor
    Click-drag   → smooth anchor with Bézier handles
 3. Click last anchor (within 6px) → convert to corner (change direction freely)
-4. Hover over first anchor (green ring appears) → drag to set closing curve → release to fill
+4. Hover over first anchor (violet ring appears) → drag to set closing curve → release to fill
 5. Press A to adjust anchors without losing the in-progress path
 6. Press P to resume drawing from the last anchor
 7. Escape → deselect; Escape again → cancel path entirely
 ```
 
 **Detailed anchor controls:**
-Press **A**, select a pen shape, then click an anchor. Its handles are labeled **IN** (incoming, green) and **OUT** (outgoing, amber); these follow the path direction rather than fixed screen left/right.
+Press **A**, select a pen shape, then click an anchor. Its handles are labeled **IN** (incoming, violet) and **OUT** (outgoing, blue); these follow the path direction rather than fixed screen left/right.
 
 - **Corner:** remove both handles for a sharp corner.
 - **Smooth:** keep handles aligned while allowing different lengths.
