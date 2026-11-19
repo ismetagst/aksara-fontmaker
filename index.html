@@ -754,12 +754,19 @@
       var p1y = unitToPxY(a.handleOut ? a.y + a.handleOut[1] : a.y);
       var p2x = unitToPxX(b.handleIn ? b.x + b.handleIn[0] : b.x);
       var p2y = unitToPxY(b.handleIn ? b.y + b.handleIn[1] : b.y);
-      for (var step = 1; step <= 50; step++){
-        var t = step / 50, mt = 1 - t;
+      // Check the short line intervals between samples, not only isolated points.
+      // More screen-space curve length gets more samples as the view is magnified.
+      var length = Math.hypot(p1x-p0x,p1y-p0y)+Math.hypot(p2x-p1x,p2y-p1y)+Math.hypot(p3x-p2x,p3y-p2y);
+      var steps = clamp(Math.ceil(length/6),32,512), previousX=p0x, previousY=p0y;
+      for (var step = 1; step <= steps; step++){
+        var t = step / steps, mt = 1 - t;
         var cx = mt*mt*mt*p0x + 3*mt*mt*t*p1x + 3*mt*t*t*p2x + t*t*t*p3x;
         var cy = mt*mt*mt*p0y + 3*mt*mt*t*p1y + 3*mt*t*t*p2y + t*t*t*p3y;
-        var d = Math.hypot(clientPos[0] - cx, clientPos[1] - cy);
-        if (d < bestDist){ bestDist = d; bestSeg = seg; bestT = t; }
+        var dx=cx-previousX, dy=cy-previousY, squaredLength=dx*dx+dy*dy;
+        var along=squaredLength ? clamp(((clientPos[0]-previousX)*dx+(clientPos[1]-previousY)*dy)/squaredLength,0,1):0;
+        var d=Math.hypot(clientPos[0]-(previousX+along*dx),clientPos[1]-(previousY+along*dy));
+        if (d < bestDist){ bestDist=d; bestSeg=seg; bestT=(step-1+along)/steps; }
+        previousX=cx; previousY=cy;
       }
     }
     return bestSeg >= 0 ? { segIndex: bestSeg, t: bestT } : null;

@@ -37,7 +37,7 @@ function editor() {
   c.resizeCanvases=()=>{c.emScale=board/1000;redraws++;};
   c.stats=()=>({board,redraws,controls});
   vm.createContext(c);
-  for(const name of ['clamp','unitToPxX','unitToPxY','pxToUnitX','pxToUnitY','eventToUnit','canvasFitDimension','canvasInteractionActive','nextCanvasZoom','refreshCanvasViewControls','layoutCanvasView','setCanvasZoom','updateCanvasFit','setupCanvasResolution','nearestCanvasPoint','activeAnchor','hitTestAnchor','hitTestHandleDot','hitTestEditPoint']) vm.runInContext(source(name),c);
+  for(const name of ['clamp','unitToPxX','unitToPxY','pxToUnitX','pxToUnitY','eventToUnit','canvasFitDimension','canvasInteractionActive','nextCanvasZoom','refreshCanvasViewControls','layoutCanvasView','setCanvasZoom','updateCanvasFit','setupCanvasResolution','nearestCanvasPoint','activeAnchor','hitTestAnchor','hitTestHandleDot','hitTestEditPoint','hitTestBezierEdge']) vm.runInContext(source(name),c);
   return c;
 }
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} ≠ ${b}`);
@@ -190,4 +190,15 @@ test('Escape exits persistent pan without deselecting or changing the active sha
   c.panDown(pointer());c.keyboard(keyEvent('Escape'));
   assert.equal(c.canvasPanActive,false);assert.equal(c.spaceDown,false);assert.equal(c.panState,null);
   assert.equal(JSON.stringify(c.selectedObject),before);
+});
+
+test('curve edge selection does not miss the gaps between samples at high zoom',()=>{
+  const c=editor(),anchors=[{x:0,y:0,handleOut:[0,1000]},{x:1000,y:0,handleIn:[0,1000]},{x:1000,y:-200}];
+  const t=.115,u=1-t,x=3*u*t*t*1000+t*t*t*1000,y=3*u*u*t*1000+3*u*t*t*1000;
+  for(const scale of [.25,.5,1,2,2.6]){
+    c.emScale=scale;const hit=c.hitTestBezierEdge([c.unitToPxX(x),c.unitToPxY(y)],anchors,6);
+    assert.ok(hit,'curve hit at scale '+scale);assert.equal(hit.segIndex,0);assert.ok(Math.abs(hit.t-t)<.003);
+    const dx=6*1000*t*u,dy=-3*1000*(1-2*t),len=Math.hypot(dx,dy);
+    assert.equal(c.hitTestBezierEdge([c.unitToPxX(x)-dy/len*20,c.unitToPxY(y)+dx/len*20],anchors,6),null);
+  }
 });

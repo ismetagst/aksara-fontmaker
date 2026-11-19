@@ -9,7 +9,7 @@
 | Detailed curves could only be edited at the fitted scale. | Add 100–400% zoom, a Fit reset, and pan/scroll navigation without changing font geometry. |
 | Anchor/handle hit tests returned the first candidate within range. | Choose the nearest candidate; compare anchor and handle distances so a nearby handle cannot steal a closer anchor click. |
 | Every selected shape's handles were shown together. | Show handles for the active anchor while retaining all anchor markers. Only visible active handles are hit-testable. |
-| Selection of a thin or hollow contour could be difficult. | Allow edge selection in Anchors mode, including points just outside the fill. |
+| Selection of a thin or hollow contour could be difficult; sparse curve samples could miss clicks between them at high zoom. | Allow edge selection in Anchors mode and measure distance to adaptive screen-space curve intervals instead of isolated sample points. |
 | High zoom and high device pixel ratio could allocate very large canvas buffers. | Bound each display buffer to 2560 px per side; keep export resolution independent. |
 
 ## Coordinate and input contract

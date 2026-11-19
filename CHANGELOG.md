@@ -10,6 +10,7 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 - Added 100–400% zoom, Fit, keyboard shortcuts, and pan using a hand toggle, Space-drag, or middle mouse.
 - Kept glyph geometry, font coordinates, and export resolution independent of zoom and scroll; capped display buffers for memory use.
 - Selected the nearest editable point and showed handles only for the active anchor during anchor editing.
+- Made curve-edge hit testing adapt to screen-space curve length and include intervals between samples for reliable high-zoom selection.
 - Added contour-edge selection in Anchors mode, preserved native field/button shortcuts, and prevented right/middle clicks from adding marks.
 - Added tests for canvas coordinates, zoom anchoring, pan input routing, fit/resize, rendering bounds, and dense-point selection.
 
