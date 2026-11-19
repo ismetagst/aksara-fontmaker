@@ -4,6 +4,13 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Favicon and search metadata
+
+- Added a violet A-monogram favicon in SVG, PNG, and ICO formats, plus Apple and application icons.
+- Added descriptive page metadata, a canonical Netlify URL, Open Graph/Twitter summaries, and website/application structured data.
+- Added a web manifest, robots.txt, sitemap.xml, and a deployment/indexing guide.
+
+
 ### Interface and canvas
 
 - Redesigned the editor with responsive studio panels, labeled tools, progress feedback, and a blue–violet palette with neutral surfaces.

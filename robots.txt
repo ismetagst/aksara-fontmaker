@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aksarafontmaker.netlify.app/sitemap.xml

@@ -42,6 +42,8 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 
 ---
 
+Live editor: [aksarafontmaker.netlify.app](https://aksarafontmaker.netlify.app/). See [SEO and site identity](docs/SEO.md) for favicon assets, metadata, and the Google indexing setup.
+
 ## Quick Start
 
 The editor lives in `index.html`. It has no build step or package installation. Font export and live preview use opentype.js, loaded from cdnjs, so an internet connection is required to load that library.
