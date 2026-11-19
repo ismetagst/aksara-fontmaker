@@ -1,0 +1,18 @@
+{
+  "name": "aksara-fontmaker-tests",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Buildless Aksara editor with development-only integration checks",
+  "scripts": {
+    "test": "node --test *.test.cjs",
+    "test:integration": "node --test editor.integration.test.cjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "1.1.1",
+    "jsdom": "29.1.1",
+    "opentype.js": "0.6.5"
+  }
+}
