@@ -2,9 +2,24 @@
 
 ## Overview
 
-Aksara as a commercial product is a Next.js web application backed by Supabase (PostgreSQL + Auth + Storage), with a credit-based payment layer integrated via Midtrans or Xendit.
+The current implementation is a standalone browser editor in `index.html`, with inline HTML/CSS/JavaScript and no build step. It uses opentype.js from cdnjs for live font preview and export. Glyphs, reference settings, and history live in browser memory; there is no persistence or server API in this checkout.
 
-The current `aksara-font-maker.html` is the complete, self-contained drawing engine. The commercialization layer wraps it in an authenticated Next.js app, gates the download behind credit deduction, and adds an admin panel.
+The planned commercial product uses Next.js backed by Supabase (PostgreSQL + Auth + Storage), with a credit-based payment layer integrated via Midtrans or Xendit. The commerce map, application layers, and security model below describe that target architecture.
+
+The future commercialization layer will wrap the drawing engine in an authenticated app, persist projects, gate downloads behind credit deduction, and add an admin panel. The current editor exports the full 62-character set without authentication or a payment gate.
+
+## Current Editor Architecture
+
+- **Presentation:** responsive neutral panels and blue–violet controls, with an artboard, external rulers, character grid, layers, anchor inspector, and live type tester.
+- **Rendering:** three stacked canvases for guides, the reference image, and ink. Grid and Guides toggle only the guide canvas; they do not change outlines or exports.
+- **Coordinates:** 1000 units/em; ascender 800, descender −200, cap height 700, x-height 500, baseline 0. Canvas coordinates use `x × emScale` and `(800 − y) × emScale`. Rulers are DOM elements outside the drawing surface.
+- **Glyphs:** 62 characters (`0–9`, `A–Z`, `a–z`), each with marks, advance width, and reference-placement settings. A reference image is shared while placement is tracked per glyph. Advance widths are clamped to 150–900 units in steps of 10.
+- **Bézier anchors:** absolute `x`/`y` positions plus relative `handleIn`/`handleOut` vectors. Optional `handleMode` records smooth, symmetric, independent, or corner behavior; legacy anchors infer continuity from their vectors. Incoming/outgoing refer to path direction.
+- **History:** per-glyph snapshots copy marks and optional unfinished paths. Anchor edits retain handle modes; open-path edits preserve before/after snapshots for undo.
+- **Export:** marching-squares contour tracing and winding correction feed opentype.js CFF/OTF generation. FontFace supplies the live preview; the preview size control affects display only.
+- **Validation:** `node --test tests/pen-controls.test.cjs` exercises geometry and editing behavior. Browser rendering, pointer interactions, and font downloads require separate manual verification.
+
+See [docs/EDITOR_GUIDE.md](docs/EDITOR_GUIDE.md) for the user workflow.
 
 ---
 
@@ -48,9 +63,9 @@ The current `aksara-font-maker.html` is the complete, self-contained drawing eng
 
 ## Application Layers
 
-### 1. Drawing Engine (current: `aksara-font-maker.html`)
+### 1. Drawing Engine (current: `index.html`)
 
-Self-contained, zero-dependency HTML/JS/CSS. Ported into a Next.js route at `/editor/[projectId]` with minimal changes:
+Buildless HTML/JS/CSS with opentype.js loaded externally. Planned migration into a Next.js route at `/editor/[projectId]`:
 - Glyph data serialized to JSON and saved to Supabase on change (debounced, ~2s)
 - Download button gated: checks credit balance / subscription quota before exporting `.otf`
 - Free tier: download limited to uppercase A–Z only
@@ -114,7 +129,7 @@ See [`docs/ADMIN_PANEL.md`](./docs/ADMIN_PANEL.md).
 | Database | Supabase PostgreSQL | Built-in auth, RLS, real-time, Storage |
 | Styling | Tailwind CSS | Same design tokens as drawing tool |
 | Payment | Midtrans or Xendit | Indonesia-first, supports virtual account + QRIS |
-| Font rendering | opentype.js v0.6.5 | Only version on cdnjs; produces valid CFF OTF |
+| Font rendering | opentype.js v0.6.5 | Current editor dependency; produces CFF OTF |
 | Hosting | Vercel | Zero-config Next.js deployment |
 | DNS / CDN | Cloudflare | Free tier covers current scale |
 
@@ -135,7 +150,8 @@ See [`docs/ADMIN_PANEL.md`](./docs/ADMIN_PANEL.md).
 See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the full phased plan.
 
 ```
-Phase 1  Auth + editor + glyph persistence + free-tier download gate
-Phase 2  Credit system + payment webhook + one-time download purchase
-Phase 3  Subscription + add-on + referral engine + admin panel + CMS
+Phase 1  Auth + editor persistence + credit wallet + payments + download gates
+Phase 2  Admin operations + CMS + email notifications
+Phase 3  Subscription + add-on + referral engine
+Phase 4  Automation + scale
 ```

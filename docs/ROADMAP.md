@@ -1,6 +1,22 @@
 # Build Roadmap
 
-Each phase ships independently and is usable on its own before the next phase begins. The tool (`aksara-font-maker.html`) is already complete and ships at the start of Phase 1.
+The standalone drawing editor (`index.html`) is available now. The commerce phases below are planned and have not been implemented in this checkout. Each phase is intended to ship independently.
+
+## Available Now — Standalone Editor
+
+- [x] Pen, freehand, move/resize, and direct anchor editing
+- [x] Corner, Smooth, Symmetric, and Independent anchor controls
+- [x] Numeric anchor coordinates and incoming/outgoing handle offsets
+- [x] Alt/Option handle separation, Alt-drag anchor conversion, and Shift angle constraints
+- [x] Per-glyph undo/redo and unfinished-path editing
+- [x] Reference image upload, placement, visibility, lock, and opacity controls
+- [x] Responsive studio redesign with blue–violet accents and neutral panels
+- [x] Artboard rulers, guide labels, advance-width boundary, and Grid/Guides toggles
+- [x] Live type tester with size control, drawing progress, and OTF download
+- [x] Resenarasi Instagram footer link with bold hover styling
+- [x] Node.js tests for anchor geometry and history behavior
+
+Browser memory is the current storage model. Saving projects across reloads belongs to Phase 1. Automated geometry tests do not establish full browser compatibility; visual and pointer testing remain separate validation tasks.
 
 ---
 
@@ -104,7 +120,7 @@ Items deferred from earlier phases to keep scope manageable:
 
 ---
 
-## Repository Conventions
+## Planned Repository Conventions
 
 ```
 src/
@@ -121,4 +137,4 @@ src/
   types/            # Database type definitions (generated from Supabase)
 ```
 
-Database migrations live in `supabase/migrations/` and are applied via the Supabase CLI (`supabase db push`).
+In the planned commerce application, database migrations will live in `supabase/migrations/` and are applied via the Supabase CLI (`supabase db push`).

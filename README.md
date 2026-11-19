@@ -21,7 +21,7 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 - Move, resize (free or Shift-proportional), and opacity control
 
 **Undo / Redo**
-- Full history stack per glyph (up to 64 steps)
+- Per-glyph history for drawing and anchor edits
 - Undo after closing a Bézier path reopens it for continued editing
 - Ctrl/Cmd+Z · Ctrl/Cmd+Shift+Z
 
@@ -32,22 +32,33 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 - Per-glyph advance width control
 
 **Interface**
-- Swiss editorial aesthetic — clean, tool-focused, zero decoration
-- Layers panel with Drawing / Reference layer controls
-- Keyboard shortcuts: V / A / P / B for tools, Arrow keys for nudge
+- Responsive studio interface with a blue–violet accent and neutral panels
+- White artboard with external coordinate rulers, cap-height / x-height / baseline labels, and advance-width boundary
+- Independent Grid and Guides display toggles; changing their visibility does not alter the glyph
+- Labeled tools, selected-anchor inspector, and Drawing / Reference layer controls
+- Live type tester with editable text and a 24–120 px size control
+- Keyboard-accessible tool buttons, active/disabled states, and drawing progress
+- Footer attribution: [Crafted by Resenarasi](https://www.instagram.com/resenarasi_/) with bold hover styling
 
 ---
 
 ## Quick Start
 
-The tool is a single, self-contained HTML file with no build step and no server required.
+The editor lives in `index.html`. It has no build step or package installation. Font export and live preview use opentype.js, loaded from cdnjs, so an internet connection is required to load that library.
 
 ```bash
-git clone https://github.com/your-org/aksara.git
-open aksara-font-maker.html
+git clone https://github.com/ismetagst/aksara-fontmaker.git
+cd aksara-fontmaker
+python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
-Or just open `aksara-font-maker.html` directly in any modern browser (Chrome, Firefox, Safari, Edge).
+Open [http://localhost:4173](http://localhost:4173). You can also open `index.html` directly in a modern browser.
+
+Choose a character, draw with **P** or **B**, test it in **Type tester**, name your font, and select **Download Font (.otf)**. At least one character must be drawn. Undrawn characters export as blanks.
+
+The current editor stores work in browser memory only. Reloading or closing the page loses the drawing; saved projects and autosave are planned commerce features.
+
+For all canvas controls, anchor modes, shortcuts, and limitations, read the [Editor Guide](docs/EDITOR_GUIDE.md).
 
 ---
 
@@ -86,7 +97,7 @@ With the Pen tool active and no path in progress, click directly on the edge of 
 
 | Concern | Approach |
 |---|---|
-| Rendering | HTML5 Canvas (two layers: reference + ink) |
+| Rendering | Three stacked HTML5 canvases: guides, reference image, and ink |
 | Bézier math | Custom implementation (flattenCubic, de Casteljau) |
 | Contour tracing | Marching squares algorithm |
 | Winding correction | Nesting-depth + scanline point-in-polygon |
@@ -98,7 +109,7 @@ With the Pen tool active and no path in progress, click directly on the edge of 
 
 ## Commerce Architecture
 
-Aksara is designed to be monetized as a SaaS product with a **credit-based economy**.
+Aksara is designed to be monetized as a SaaS product with a **credit-based economy**. The commerce documents below describe planned functionality; authentication, saved projects, payments, and admin tools are not implemented in the current standalone editor.
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full system overview, and the [`docs/`](./docs/) folder for detailed specifications:
 
@@ -108,19 +119,23 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full system overview, and the
 | [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md) | Full PostgreSQL schema (Supabase) |
 | [`docs/PAYMENT_FLOW.md`](./docs/PAYMENT_FLOW.md) | Midtrans/Xendit integration, webhook handling |
 | [`docs/ADMIN_PANEL.md`](./docs/ADMIN_PANEL.md) | Admin dashboard and CMS specifications |
-| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | Phased build plan (Phase 1 → 3) |
+| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | Shipped editor features and planned commerce phases (1–4) |
 
 ---
 
 ## Repository Structure
 
-```
-aksara/
-├── aksara-font-maker.html   # Standalone tool (open directly in browser)
+```text
+aksara-fontmaker/
+├── index.html                 # Standalone editor, styles, and drawing logic
 ├── README.md
 ├── ARCHITECTURE.md
+├── CHANGELOG.md
 ├── LICENSE
+├── tests/
+│   └── pen-controls.test.cjs   # Node.js geometry and anchor behavior checks
 └── docs/
+    ├── EDITOR_GUIDE.md
     ├── CREDIT_SYSTEM.md
     ├── DATABASE_SCHEMA.md
     ├── PAYMENT_FLOW.md
@@ -130,9 +145,23 @@ aksara/
 
 ---
 
+## Validation
+
+Run the geometry and anchor behavior checks with Node.js:
+
+```bash
+node --test tests/pen-controls.test.cjs
+```
+
+These tests cover handle modes, modifier constraints, transform copies, open-path history snapshots, and curve-preserving anchor insertion. They do not replace browser checks for rendering, pointer interactions, image upload, live preview, or `.otf` download.
+
+See [CHANGELOG.md](CHANGELOG.md) for the editor updates.
+
+---
+
 ## Credits
 
-Built by **PT Digital Pustaka Senarasi**
+Crafted by [**Resenarasi**](https://www.instagram.com/resenarasi_/)
 
 Font rendering powered by [opentype.js](https://github.com/opentypejs/opentype.js) (MIT License).
 
