@@ -4,6 +4,14 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Focus mode
+
+- Added manual header collapse with a compact A-logo restore button and export icon in the tool rail; remembered the view preference when local storage is available.
+- Moved character navigation into the artboard bar and progress into Character set; removed the separate Glyph editor heading and repeated units/em badge.
+- Kept export/error feedback outside the hidden header and shared the download handler and busy state across both export controls.
+- Guarded header reflow during active pointer gestures and covered header restoration, storage fallback, geometry/name preservation, unfinished paths, and focused export in integration tests.
+
+
 ### Visible grid toggle
 
 - Replaced nearly invisible low-opacity 1 px dots with 50-unit grid lines and stronger 100-unit lines.

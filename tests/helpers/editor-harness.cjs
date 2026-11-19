@@ -10,12 +10,14 @@ const opentype = require('opentype.js');
 const html = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
-function createEditor({ viewportSize = 600 } = {}) {
+function createEditor({ viewportSize = 600, focusPreference, storageUnavailable = false } = {}) {
   const errors = [], warnings = [], downloads = [], previews = [], fontKeys = [];
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', error => errors.push(error.message));
   const dom = new JSDOM(html, { url:'https://aksarafontmaker.netlify.app/', runScripts:'outside-only', virtualConsole });
   const w = dom.window, d = w.document;
+  if (storageUnavailable) Object.defineProperty(w,'localStorage',{get(){throw new Error('Preference storage unavailable');}});
+  else if (focusPreference !== undefined) w.localStorage.setItem('aksara:focus-mode',focusPreference ? '1':'0');
   w.console.error = (...args) => errors.push(args.map(String).join(' '));
   w.console.warn = (...args) => warnings.push(args.map(String).join(' '));
   const canvases = new WeakMap(), captures = new Map(), timers = new Map();
@@ -88,7 +90,7 @@ function createEditor({ viewportSize = 600 } = {}) {
       await settle();
     }
   }
-  async function download(){const before=downloads.length;await click('#downloadBtn');await flushTimers();assert.equal(downloads.length,before+1,errors.join('\n'));const item=downloads.at(-1);item.buffer=await item.blob.arrayBuffer();item.font=opentype.parse(item.buffer);return item;}
+  async function download(selector='#downloadBtn'){const before=downloads.length;await click(selector);await flushTimers();assert.equal(downloads.length,before+1,errors.join('\n'));const item=downloads.at(-1);item.buffer=await item.blob.arrayBuffer();item.font=opentype.parse(item.buffer);return item;}
   async function chooseFile(buffer,name='scan.png',type='image/png'){
     const input=get('#refFileInput'),file=new w.File([buffer],name,{type});
     Object.defineProperty(input,'files',{configurable:true,value:[file]});input.dispatchEvent(new w.Event('change',{bubbles:true}));await settle();

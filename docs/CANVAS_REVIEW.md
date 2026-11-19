@@ -32,9 +32,13 @@ Browser automation was unavailable during this review. These automated checks ex
 
 ## Vertical toolbar and workflow follow-up
 
-The two horizontal tool rows have been replaced with a vertical rail sharing the canvas row. Character navigation is in the compact heading; width, freehand weight, pen actions, and reference controls are in the inspector. This removes tool rows above the artboard.
+The two horizontal tool rows have been replaced with a vertical rail sharing the canvas row. Character navigation is now in the artboard bar without a separate editor heading; width, freehand weight, pen actions, and reference controls are in the inspector. This removes tool rows above the artboard.
 
 Full-editor integration tests now execute the unmodified editor script using a DOM, actual native Canvas rendering, and OpenType generation/parsing. They found and now prevent drawing into a hidden layer, validate corrupt reference handling, and check hole preservation in exported contours. These extend the geometry tests without replacing browser layout or touch/stylus verification. See [TESTING.md](TESTING.md).
+
+## Focus-mode follow-up
+
+The full project header can be hidden manually. A small A-logo restore button and export icon remain in the rail, progress stays with Character set, and the 1000 units/em readout stays in the footer. A locally stored preference restores the chosen view on startup; storage failures fall back safely. Active pointer gestures block layout changes, and both export controls use the same handler/busy state. Integration tests verify view restoration, geometry/name preservation, unfinished paths, and focused export.
 
 ## Manual browser checklist
 

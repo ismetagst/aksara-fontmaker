@@ -16,6 +16,7 @@ The standalone drawing editor (`index.html`) is available now. The commerce phas
 - [x] Live type tester with size control, drawing progress, and OTF download
 - [x] Resenarasi Instagram footer link with bold hover styling
 - [x] Vertical tool rail with contextual glyph/reference inspector controls
+- [x] Manual, remembered Focus mode with collapsed header, compact branding, artboard navigation, and accessible export
 - [x] Node.js geometry checks and full-editor integration workflows through Canvas rendering and OTF parsing
 
 Browser memory is the current storage model. Saving projects across reloads belongs to Phase 1. Automated geometry tests do not establish full browser compatibility; visual and pointer testing remain separate validation tasks.

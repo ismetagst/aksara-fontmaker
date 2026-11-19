@@ -45,10 +45,11 @@ The integration workflows cover:
 8. Invalid image MIME types and corrupted image data while preserving the previous reference.
 9. Nested contours rasterized from the exported glyph to verify that a counter remains transparent.
 10. Grid On/Off produces a visible pixel change independently of Guides, while guide lines remain available when grid is disabled.
+11. Header collapse/restore, remembered Focus mode and storage fallback, preserving font name and outlines, active-gesture protection, unfinished paths, and shared export busy state.
 
 ## Current result and limits
 
-The suite contains **30 geometry/view tests and 12 workflow integration tests**. All passed during the vertical-toolbar update.
+The suite contains **30 geometry/view tests and 17 workflow integration tests**. All passed after the Focus-mode update.
 
 The harness adapts layout dimensions, pointer capture, clocks, and FontFace. It does not render CSS layout or execute a real browser. Consequently, these tests do **not** certify responsive visual layout, browser-native FontFace loading, native download dialogs, file-picker UI, Safari/Chrome differences, or touch/stylus compatibility.
 

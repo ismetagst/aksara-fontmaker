@@ -13,9 +13,22 @@ This guide describes the standalone editor in [`index.html`](../index.html). For
 
 At least one glyph must contain a mark before export. Characters that have not been drawn export as blank spaces. Work exists only in browser memory: reloading or closing the page loses the project.
 
+## Focus mode
+
+Use the chevron button at the very top of the left tool rail to enter Focus mode. It hides the entire project header, including the large wordmark, introduction, font-name field, and full download button. There is no replacement header row above the editor.
+
+- The small **A logo** remains at the top of the rail. Click it to restore the full header and edit the font name.
+- The download icon remains available in the rail while focused. It exports the same project and font name as the full header button.
+- Drawing progress lives in **Character set** in both modes. Character navigation stays in the artboard bar; the 1000 units/em readout appears only in the canvas footer.
+- Export/error messages remain visible outside the hidden header.
+- Toggling modes preserves glyphs, reference settings, unfinished paths, and zoom. It does not interrupt an active pointer gesture; finish the stroke/drag before changing modes.
+- The preference is remembered in local browser storage when available. If storage is unavailable, the toggle still works for the current page.
+
+This saved preference concerns the interface only. It does not add project autosave: drawings still exist in browser memory until you leave or reload the page.
+
 ## Canvas and guides
 
-The white artboard sits beside a vertical tool rail, directly below the compact Glyph editor heading. Move, Anchors, Draw, Pen, Pan, history, clear, and reference upload live in the compact icon-only rail. Hover or focus a tool to see its name and shortcut; Escape dismisses the tooltip. Accessible button names remain available to screen readers. Width, tool-specific options, reference controls, layers, and anchor properties live in the inspector. The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
+The white artboard sits beside a vertical tool rail with character navigation (**‹ 0 ›**) in its own top bar. The separate Glyph editor title row has been removed. Move, Anchors, Draw, Pen, Pan, history, clear, and reference upload live in the compact icon-only rail. Hover or focus a tool to see its name and shortcut; Escape dismisses the tooltip. Accessible button names remain available to screen readers. Width, tool-specific options, reference controls, layers, and anchor properties live in the inspector. The white artboard uses the available canvas viewport inside a quiet neutral studio surface. The inspector moves below the canvas on narrower screens. Rulers sit outside the drawing surface and display font units, so they do not offset anchor coordinates.
 
 | Measurement | Value |
 | --- | --- |

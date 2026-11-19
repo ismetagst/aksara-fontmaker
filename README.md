@@ -35,7 +35,8 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 - Responsive studio interface with a blue–violet accent and neutral panels
 - White artboard with external coordinate rulers, cap-height / x-height / baseline labels, and advance-width boundary
 - Independent Grid and Guides toggles, 100–400% canvas zoom, Fit, and hand panning; view changes do not alter the glyph
-- Compact icon-only tool rail with hover/focus tooltips, a glyph navigator, and contextual glyph/reference/anchor settings in the inspector
+- Compact icon-only tool rail with hover/focus tooltips, character navigation in the artboard bar, and contextual settings in the inspector
+- Manual Focus mode hides the project header, keeps the A logo/restore control and font export available, and remembers the view preference
 - Live type tester with editable text and a 24–120 px size control
 - Keyboard-accessible tool buttons, active/disabled states, and drawing progress
 - Footer attribution: [Crafted by Resenarasi](https://www.instagram.com/resenarasi_/) with bold hover styling
@@ -58,7 +59,7 @@ Open [http://localhost:4173](http://localhost:4173). You can also open `index.ht
 
 Choose a character, draw with **P** or **B**, test it in **Type tester**, name your font, and select **Download Font (.otf)**. At least one character must be drawn. Undrawn characters export as blanks.
 
-The current editor stores work in browser memory only. Reloading or closing the page loses the drawing; saved projects and autosave are planned commerce features.
+The Focus mode preference is saved locally when browser storage is available. The current editor stores work in browser memory only. Reloading or closing the page loses the drawing; saved projects and autosave are planned commerce features.
 
 For all canvas controls, anchor modes, shortcuts, and limitations, read the [Editor Guide](docs/EDITOR_GUIDE.md).
 

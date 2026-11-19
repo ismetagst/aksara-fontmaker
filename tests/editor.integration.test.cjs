@@ -10,7 +10,9 @@ test('vertical toolbar keeps artboard beside tools and settings out of the canva
   assert.equal(e.document.querySelector('.editor-toolbar'),null);
   for(const selector of ['#modeGroup','#panToggle','#undoBtn','#redoBtn','#clearBtn','#uploadRefBtn']) assert.ok(e.get(selector).closest('.tool-rail'),selector);
   for(const selector of ['#widthInput','#weightGroup','#penActionsGroup','#refControls']) assert.ok(e.get(selector).closest('.inspector'),selector);
-  assert.ok(e.get('#currentCharLabel').closest('.editor-heading'));
+  assert.ok(e.get('#currentCharLabel').closest('.canvas-chrome'));
+  assert.equal(e.document.querySelector('.editor-heading'),null);
+  assert.ok(e.get('#progressLabel').closest('.charpanel'));
   for(const button of e.document.querySelectorAll('.tool-rail button')){assert.ok(button.getAttribute('aria-label'));assert.ok(button.dataset.tooltip);assert.equal(button.querySelector('.tool-name,.tool-shortcut,.rail-name'),null);}
   const tool=e.get('[data-mode="pen"]');tool.focus();await e.key('Escape');assert.equal(tool.classList.contains('tooltip-dismissed'),true);tool.blur();assert.equal(tool.classList.contains('tooltip-dismissed'),false);
   assert.equal(e.get('#undoBtn').disabled,true);assert.equal(e.get('#refControls').style.display,'none');
@@ -130,4 +132,43 @@ test('Grid toggle visibly changes canvas pixels independently of Guides',async t
   await e.click('#guidesToggle');const withBoth=canvas.toBuffer('image/png');await e.click('#gridToggle');
   assert.ok(e.painted('guidesCanvas')>0,'height and advance guides remain when grid is off');assert.notDeepEqual(canvas.toBuffer('image/png'),withBoth);
   assert.deepEqual(e.errors,[]);
+});
+test('Focus mode collapses the full header while keeping branding, navigation and valid font export',async t=>{
+  const e=createEditor();t.after(e.close);assert.equal(e.get('#projectHeader').hidden,false);assert.equal(e.get('#focusToggleBtn').getAttribute('aria-expanded'),'true');
+  await e.input('#fontNameInput','Focus Studio');await penTriangle(e);const before=commands((await e.download()).font,'0');
+  await e.click('#zoomInBtn');await e.click('#zoomInBtn');await e.click('#focusToggleBtn');
+  assert.equal(e.get('#projectHeader').hidden,true);assert.equal(e.window.getComputedStyle(e.get('#projectHeader')).display,'none');
+  assert.equal(e.get('#focusBrand').hidden,false);assert.match(e.get('#focusBrand img').alt,/Aksara/);assert.equal(e.get('#focusExportGroup').hidden,false);
+  assert.equal(e.get('#focusToggleBtn').getAttribute('aria-expanded'),'false');assert.equal(e.window.localStorage.getItem('aksara:focus-mode'),'1');
+  assert.equal(e.get('#fontNameInput').value,'Focus Studio');assert.equal(e.get('#canvasZoomLabel').textContent,'150%');
+  await e.click('#nextBtn');assert.equal(e.get('#currentCharLabel').textContent,'1');await e.click('#prevBtn');
+  const result=await e.download('#railDownloadBtn');assert.equal(result.filename,'focus-studio.otf');assert.deepEqual(commands(result.font,'0'),before);
+  await e.click('#focusToggleBtn');assert.equal(e.get('#projectHeader').hidden,false);assert.equal(e.get('#focusExportGroup').hidden,true);
+  assert.equal(e.get('#fontNameInput').value,'Focus Studio');assert.equal(e.window.localStorage.getItem('aksara:focus-mode'),'0');assert.deepEqual(e.errors,[]);
+});
+test('Focus preference restores on startup and unavailable storage does not block the editor',async t=>{
+  const remembered=createEditor({focusPreference:true});t.after(remembered.close);
+  assert.equal(remembered.get('#projectHeader').hidden,true);assert.equal(remembered.get('#focusBrand').hidden,false);
+  await remembered.click('#railDownloadBtn');assert.match(remembered.get('#statusLine').textContent,/Draw at least one/);
+  assert.equal(remembered.get('#statusLine').closest('#projectHeader'),null,'status remains visible outside the collapsed header');
+  const restricted=createEditor({storageUnavailable:true});t.after(restricted.close);assert.equal(restricted.get('#projectHeader').hidden,false);
+  await restricted.click('#focusToggleBtn');assert.equal(restricted.get('#projectHeader').hidden,true);await restricted.click('#focusToggleBtn');assert.equal(restricted.get('#projectHeader').hidden,false);
+  assert.deepEqual(remembered.errors,[]);assert.deepEqual(restricted.errors,[]);
+});
+test('Focus mode never reflows the canvas during an active drawing gesture',async t=>{
+  const e=createEditor();t.after(e.close);await e.click('[data-mode="freehand"]');await e.pointer('pointerdown',100,100);
+  await e.click('#focusToggleBtn');assert.equal(e.get('#projectHeader').hidden,false);
+  await e.pointer('pointermove',300,600);await e.pointer('pointerup',300,600);await e.click('#focusToggleBtn');assert.equal(e.get('#projectHeader').hidden,true);
+  assert.ok(commands((await e.download('#railDownloadBtn')).font,'0').length>4);assert.deepEqual(e.errors,[]);
+});
+test('an unfinished path survives collapsing and restoring the project header',async t=>{
+  const e=createEditor();t.after(e.close);await e.click('[data-mode="pen"]');await e.dot(100,100);await e.dot(300,650,[350,650]);
+  await e.click('#focusToggleBtn');await e.dot(500,100);await e.click('#focusToggleBtn');await e.click('#closePathBtn');
+  assert.match(e.get('#progressLabel').textContent,/1\s*\/\s*62/);assert.ok(commands((await e.download()).font,'0').length>=4);assert.deepEqual(e.errors,[]);
+});
+test('header and focused export controls share busy state and do not start duplicate downloads',async t=>{
+  const e=createEditor({focusPreference:true});t.after(e.close);await penTriangle(e);await e.click('#railDownloadBtn');
+  assert.equal(e.get('#downloadBtn').disabled,true);assert.equal(e.get('#railDownloadBtn').disabled,true);assert.equal(e.get('#railDownloadBtn').getAttribute('aria-busy'),'true');
+  e.get('#downloadBtn').click();e.get('#railDownloadBtn').click();await e.flushTimers();
+  assert.equal(e.downloads.length,1);assert.equal(e.get('#downloadBtn').disabled,false);assert.equal(e.get('#railDownloadBtn').disabled,false);assert.deepEqual(e.errors,[]);
 });
