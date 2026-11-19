@@ -4,6 +4,12 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Visible grid toggle
+
+- Replaced nearly invisible low-opacity 1 px dots with 50-unit grid lines and stronger 100-unit lines.
+- Added explicit Grid On/Off feedback and a regression check for the pixel difference independently of Guides.
+
+
 ### Compact tools and guide clarity
 
 - Reduced the desktop tool rail from 64 to 48 px and tool icons from 18 to 16 px; removed visible tool text in favor of hover/focus tooltips and accessible names.

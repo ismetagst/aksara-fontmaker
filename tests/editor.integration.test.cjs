@@ -117,3 +117,17 @@ test('reference moves only when unlocked and hiding it clears the selection',asy
   await e.click('#toggleRefBtn');assert.equal(e.painted('refCanvas'),0);assert.equal(e.painted('inkCanvas'),0,'hidden reference has no remaining transform overlay');
   assert.deepEqual(e.errors,[]);
 });
+test('Grid toggle visibly changes canvas pixels independently of Guides',async t=>{
+  const e=createEditor();t.after(e.close);await e.click('#guidesToggle');
+  const canvas=e.backing(e.get('#guidesCanvas')),ctx=canvas.getContext('2d');
+  const initial=Buffer.from(ctx.getImageData(0,0,canvas.width,canvas.height).data);
+  let coverage=0,peakAlpha=0;
+  for(let n=3;n<initial.length;n+=4){if(initial[n])coverage++;peakAlpha=Math.max(peakAlpha,initial[n]);}
+  assert.ok(coverage>canvas.width*canvas.height*.025,'enabled grid must cover visible line intervals, not nearly invisible dots');
+  assert.ok(peakAlpha>=50,'grid must have enough opacity to distinguish it from white');
+  await e.click('#gridToggle');assert.equal(e.get('#gridToggle').getAttribute('aria-pressed'),'false');assert.equal(e.get('#gridState').textContent,'Off');assert.equal(e.painted('guidesCanvas'),0);
+  await e.click('#gridToggle');assert.equal(e.get('#gridState').textContent,'On');assert.deepEqual(Buffer.from(ctx.getImageData(0,0,canvas.width,canvas.height).data),initial);
+  await e.click('#guidesToggle');const withBoth=canvas.toBuffer('image/png');await e.click('#gridToggle');
+  assert.ok(e.painted('guidesCanvas')>0,'height and advance guides remain when grid is off');assert.notDeepEqual(canvas.toBuffer('image/png'),withBoth);
+  assert.deepEqual(e.errors,[]);
+});

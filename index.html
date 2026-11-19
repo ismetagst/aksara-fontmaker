@@ -222,6 +222,7 @@
   .tool-rail button.tooltip-dismissed::after{opacity:0!important;visibility:hidden!important}
   @media(max-width:760px){.editor-body{grid-template-columns:44px minmax(0,1fr)}.tool-rail{padding:8px 4px}.tool-rail #modeGroup .icon-btn,.tool-rail .rail-group .icon-btn,.tool-rail .pan-toggle{height:36px}}
   @media(pointer:coarse){.tool-rail #modeGroup .icon-btn,.tool-rail .rail-group .icon-btn,.tool-rail .pan-toggle{min-height:40px}}
+  .grid-state{font-size:9px;opacity:.75;margin-left:3px;font-weight:600}
 </style>
 </head>
 <body>
@@ -305,7 +306,7 @@
           </button><input type="file" id="refFileInput" accept="image/*" style="display:none"></div></aside><div class="editor-workspace"><div class="drawing-area">
       <div class="canvas-chrome">
         <div class="canvas-document"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="3" width="12" height="14" rx="2"/><path d="M7 7h6M7 10h4"/></svg><span>Artboard <span id="artboardCharLabel">0</span></span><small>Glyph workspace</small></div>
-        <div class="canvas-controls" role="group" aria-label="Canvas display"><button type="button" class="view-toggle" id="gridToggle" aria-pressed="true" title="Visual grid every 50 font units. No snapping; not included in the exported font.">Grid</button><button type="button" class="view-toggle" id="guidesToggle" aria-pressed="true" title="Cap height 700, x-height 500, baseline 0, and advance width. Guides do not crop your drawing.">Guides</button></div>
+        <div class="canvas-controls" role="group" aria-label="Canvas display"><button type="button" class="view-toggle" id="gridToggle" aria-pressed="true" title="Visual grid every 50 font units. No snapping; not included in the exported font.">Grid <span class="grid-state" id="gridState" aria-hidden="true">On</span></button><button type="button" class="view-toggle" id="guidesToggle" aria-pressed="true" title="Cap height 700, x-height 500, baseline 0, and advance width. Guides do not crop your drawing.">Guides</button></div>
       </div>
       <div class="canvas-viewport" id="canvasViewport" tabindex="0" role="region" aria-label="Drawing workspace. Use zoom controls or plus and minus keys. Space-drag to pan."><div class="canvas-stage" id="canvasStage"><div class="artboard-shell" id="artboardShell">
         <div class="canvas-ruler ruler-top" aria-hidden="true"><span style="left:0.0%">0</span><span style="left:20.0%">200</span><span style="left:40.0%">400</span><span style="left:60.0%">600</span><span style="left:80.0%">800</span><span style="left:100.0%">1000</span></div>
@@ -1074,12 +1075,20 @@
     var gWidth = glyphs[activeChar].width, rightPx = unitToPxX(gWidth);
     guidesCtx.clearRect(0, 0, w, h);
     if (canvasGridVisible){
-      guidesCtx.fillStyle = 'rgba(100,98,136,0.14)';
-      for (var u = 0; u <= 1000; u += 50){
-        for (var v = -200; v <= 800; v += 50){
-          guidesCtx.fillRect(unitToPxX(u)-.5, unitToPxY(v)-.5, 1, 1);
-        }
+      guidesCtx.save(); guidesCtx.setLineDash([]);
+      // Visible font-space grid: 50-unit subdivisions and stronger 100-unit lines.
+      // Stroke widths stay in screen pixels, independently of zoom.
+      for (var u = 0; u <= UNIT_SPAN; u += 50){
+        var major = u % 100 === 0;
+        guidesCtx.strokeStyle = major ? 'rgba(103,99,135,0.24)' : 'rgba(103,99,135,0.12)';
+        guidesCtx.lineWidth = major ? 1 : .5;
+        var px=unitToPxX(u), py=unitToPxY(ASCENDER-u);
+        guidesCtx.beginPath();
+        guidesCtx.moveTo(px,0); guidesCtx.lineTo(px,h);
+        guidesCtx.moveTo(0,py); guidesCtx.lineTo(w,py);
+        guidesCtx.stroke();
       }
+      guidesCtx.restore();
     }
     if (!canvasGuidesVisible) return;
     guidesCtx.fillStyle = 'rgba(112,99,165,0.055)';
@@ -2425,7 +2434,9 @@
   });
 
   document.getElementById('gridToggle').addEventListener('click',function(){
-    canvasGridVisible=!canvasGridVisible; this.setAttribute('aria-pressed',String(canvasGridVisible)); drawGuides();
+    canvasGridVisible=!canvasGridVisible; this.setAttribute('aria-pressed',String(canvasGridVisible));
+    document.getElementById('gridState').textContent=canvasGridVisible ? 'On':'Off';
+    drawGuides();
   });
   document.getElementById('guidesToggle').addEventListener('click',function(){
     canvasGuidesVisible=!canvasGuidesVisible; this.setAttribute('aria-pressed',String(canvasGuidesVisible)); drawGuides();

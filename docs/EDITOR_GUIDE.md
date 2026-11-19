@@ -31,10 +31,10 @@ The cap-height and x-height values are Aksara’s current presets, not universal
 
 Font Y coordinates increase upward. The artboard's top-left is `(0, 800)`, and its bottom-left is `(0, −200)`.
 
-- **Grid** shows or hides the 50-unit dot grid.
+- **Grid** shows or hides a line grid: 50-unit subdivisions with stronger lines every 100 units. The button displays On/Off so its state is explicit.
 - **Guides** shows or hides the cap-height, x-height, baseline, and advance-width boundary, together with the area beyond that boundary.
 - The vertical **ADV** line is the advance width: where the next character begins, not a clipping edge. Ink may extend beyond it. The advance-width readout follows the active glyph. **Width** accepts 150–900 units and rounds to steps of 10.
-- The dot grid is visual guidance; it does not snap anchors to grid points.
+- The line grid is visual guidance; it does not snap anchors to grid intersections.
 - These display controls affect neither drawing coordinates nor exported outlines. The rulers remain visible when the grid or guides are hidden.
 
 ### Zoom and pan

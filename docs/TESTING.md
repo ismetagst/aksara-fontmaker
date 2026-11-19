@@ -44,10 +44,11 @@ The integration workflows cover:
 7. Editing an unfinished path, resuming, closing, undoing closure, cancelling, and the empty-font download guard.
 8. Invalid image MIME types and corrupted image data while preserving the previous reference.
 9. Nested contours rasterized from the exported glyph to verify that a counter remains transparent.
+10. Grid On/Off produces a visible pixel change independently of Guides, while guide lines remain available when grid is disabled.
 
 ## Current result and limits
 
-The suite contains **30 geometry/view tests and 11 workflow integration tests**. All passed during the vertical-toolbar update.
+The suite contains **30 geometry/view tests and 12 workflow integration tests**. All passed during the vertical-toolbar update.
 
 The harness adapts layout dimensions, pointer capture, clocks, and FontFace. It does not render CSS layout or execute a real browser. Consequently, these tests do **not** certify responsive visual layout, browser-native FontFace loading, native download dialogs, file-picker UI, Safari/Chrome differences, or touch/stylus compatibility.
 
