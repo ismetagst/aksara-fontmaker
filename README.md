@@ -36,6 +36,7 @@ Aksara is a professional-grade, browser-native vector font creation tool. Draw g
 - White artboard with external coordinate rulers, cap-height / x-height / baseline labels, and advance-width boundary
 - Independent Grid and Guides toggles, 100–400% canvas zoom, Fit, and hand panning; view changes do not alter the glyph
 - Compact icon-only tool rail with hover/focus tooltips, character navigation in the artboard bar, and contextual settings in the inspector
+- Adaptive workspace height, collapsible Character set, and contextual inspector panels
 - Manual Focus mode hides the project header, keeps the A logo/restore control and font export available, and remembers the view preference
 - Live type tester with editable text and a 24–120 px size control
 - Keyboard-accessible tool buttons, active/disabled states, and drawing progress

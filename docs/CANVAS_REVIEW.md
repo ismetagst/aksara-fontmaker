@@ -49,3 +49,9 @@ The full project header can be hidden manually. A small A-logo restore button an
 - Check 360 px mobile, tablet, and desktop layouts; ensure the inspector does not shrink the mobile drawing surface and the zoom controls remain reachable.
 - Upload a reference image, adjust it at different zoom levels, then verify layer locks/visibility and live font preview.
 - Check touch/stylus panning and drawing, keyboard focus, and exported-font installation in actual browsers.
+
+## Adaptive workspace follow-up
+
+The viewport now uses available window height (280–960 px) rather than a square viewport. The artboard stays square and Fit still uses the smaller viewport dimension. Its top offset is measured in document coordinates, avoiding Fit changes caused solely by page scrolling. Character set can collapse to a narrow desktop column or a compact mobile heading; navigation stays in the canvas chrome. Anchor and Reference panels are contextual, and tool hints are compact. Character navigation targets are 32 px, increased to 40 px for coarse pointers.
+
+Manual review still needed: expanded/focused headers at laptop heights, collapsed Character set above/below the 760 px breakpoint, inspector movement at 1180 px, page scrolling, 400% canvas panning, and touch interactions. DOM/native-canvas tests do not establish visual browser approval.

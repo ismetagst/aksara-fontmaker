@@ -18,12 +18,12 @@ function editor() {
     canvasZoom:1, canvasFitSize:538, ZOOM_LEVELS:[1,1.25,1.5,2,3,4],
     isDrawing:false, isPlacingAnchor:false, isClosingPath:false, dragState:null, panState:null,
     canvasPanActive:false, spaceDown:false, selectedObject:null, selectedAnchorIndex:null, inProgressPen:null,
-    document:{getElementById(id){ if(!controls.has(id)) controls.set(id,{textContent:'',disabled:false,setAttribute(){}}); return controls.get(id); }},
-    getComputedStyle:()=>({paddingLeft:'20px'}), window:{devicePixelRatio:2},
+    canvasNote:{offsetHeight:24}, document:{querySelector:()=>({offsetHeight:40}),getElementById(id){ if(!controls.has(id)) controls.set(id,{textContent:'',disabled:false,setAttribute(){}}); return controls.get(id); }},
+    getComputedStyle:()=>({paddingLeft:'20px'}), window:{devicePixelRatio:2,scrollY:0},
   };
   let board = 538, redraws = 0;
   const viewport = {
-    clientWidth:600,clientHeight:600,scrollLeft:0,scrollTop:0,
+    style:{setProperty(){}},clientWidth:600,clientHeight:600,scrollLeft:0,scrollTop:0,
     classList:{toggle(){},remove(){}},getBoundingClientRect:()=>({left:100,top:50}),
     hasPointerCapture:()=>false,
   };
@@ -37,7 +37,7 @@ function editor() {
   c.resizeCanvases=()=>{c.emScale=board/1000;redraws++;};
   c.stats=()=>({board,redraws,controls});
   vm.createContext(c);
-  for(const name of ['clamp','unitToPxX','unitToPxY','pxToUnitX','pxToUnitY','eventToUnit','canvasFitDimension','canvasInteractionActive','nextCanvasZoom','refreshCanvasViewControls','layoutCanvasView','setCanvasZoom','updateCanvasFit','setupCanvasResolution','nearestCanvasPoint','activeAnchor','hitTestAnchor','hitTestHandleDot','hitTestEditPoint','hitTestBezierEdge']) vm.runInContext(source(name),c);
+  for(const name of ['clamp','unitToPxX','unitToPxY','pxToUnitX','pxToUnitY','eventToUnit','canvasFitDimension','canvasInteractionActive','nextCanvasZoom','refreshCanvasViewControls','updateWorkspaceHeight','layoutCanvasView','setCanvasZoom','updateCanvasFit','setupCanvasResolution','nearestCanvasPoint','activeAnchor','hitTestAnchor','hitTestHandleDot','hitTestEditPoint','hitTestBezierEdge']) vm.runInContext(source(name),c);
   return c;
 }
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} ≠ ${b}`);
@@ -201,4 +201,12 @@ test('curve edge selection does not miss the gaps between samples at high zoom',
     const dx=6*1000*t*u,dy=-3*1000*(1-2*t),len=Math.hypot(dx,dy);
     assert.equal(c.hitTestBezierEdge([c.unitToPxX(x)-dy/len*20,c.unitToPxY(y)+dx/len*20],anchors,6),null);
   }
+});
+
+test('workspace height uses document position so page scrolling does not change Fit',()=>{
+  const c=editor();let offset;
+  c.canvasViewport.style.setProperty=(name,value)=>{assert.equal(name,'--workspace-offset');offset=value;};
+  c.updateWorkspaceHeight();assert.equal(offset,'140px');
+  c.window.scrollY=30;c.canvasViewport.getBoundingClientRect=()=>({left:100,top:20});
+  c.updateWorkspaceHeight();assert.equal(offset,'140px');
 });

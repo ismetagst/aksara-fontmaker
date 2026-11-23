@@ -172,3 +172,44 @@ test('header and focused export controls share busy state and do not start dupli
   e.get('#downloadBtn').click();e.get('#railDownloadBtn').click();await e.flushTimers();
   assert.equal(e.downloads.length,1);assert.equal(e.get('#downloadBtn').disabled,false);assert.equal(e.get('#railDownloadBtn').disabled,false);assert.deepEqual(e.errors,[]);
 });
+
+
+test('Character set collapse preserves unfinished paths, zoom, navigation, history and export',async t=>{
+  const e=createEditor();t.after(e.close);
+  await e.click('[data-mode="pen"]');await e.dot(100,100);await e.dot(300,650);
+  await e.click('#zoomInBtn');await e.click('#charPanelToggle');
+  assert.equal(e.get('#charPanelContent').hidden,true);
+  assert.equal(e.get('#charPanelToggle').getAttribute('aria-expanded'),'false');
+  assert.equal(e.get('#canvasZoomLabel').textContent,'125%');
+  await e.dot(500,100);await e.click('#closePathBtn');
+  const before=commands((await e.download()).font,'0');
+  await e.click('#charPanelToggle');assert.equal(e.get('#charPanelContent').hidden,false);
+  await e.click('#undoBtn');assert.equal(e.get('#closePathBtn').disabled,false);await e.click('#redoBtn');
+  assert.deepEqual(commands((await e.download()).font,'0'),before);
+  await e.click('#charPanelToggle');await e.click('#nextBtn');assert.equal(e.get('#currentCharLabel').textContent,'1');
+  await e.click('#prevBtn');assert.deepEqual(commands((await e.download()).font,'0'),before);
+  assert.deepEqual(e.errors,[]);
+});
+test('Character set cannot reflow the editor during a live pointer gesture',async t=>{
+  const e=createEditor();t.after(e.close);await e.click('[data-mode="freehand"]');
+  await e.pointer('pointerdown',100,100);await e.click('#charPanelToggle');
+  assert.equal(e.get('#charPanelContent').hidden,false);
+  await e.pointer('pointermove',200,500);await e.pointer('pointerup',300,100);
+  assert.ok(commands((await e.download()).font,'0').length>0);
+  await e.click('#charPanelToggle');assert.equal(e.get('#charPanelContent').hidden,true);
+  assert.deepEqual(e.errors,[]);
+});
+test('inspector follows reference and anchor context without dropping values or geometry',async t=>{
+  const e=createEditor();t.after(e.close);
+  assert.equal(e.get('.reference-panel').hidden,true);assert.equal(e.get('.anchor-panel').hidden,true);
+  await penTriangle(e);const before=commands((await e.download()).font,'0');
+  await e.click('[data-mode="select"]');await e.dot(300,300);await e.dot(100,100);
+  assert.equal(e.get('.anchor-panel').hidden,false);
+  await e.click('[data-mode="move"]');await e.key('Escape');assert.equal(e.get('.anchor-panel').hidden,true);
+  const scan=createCanvas(20,20);scan.getContext('2d').fillRect(0,0,20,20);await e.upload(scan.toBuffer('image/png'));
+  assert.equal(e.get('.reference-panel').hidden,false);await e.input('#refOpacity',65);
+  await e.click('#nextBtn');assert.equal(e.get('.reference-panel').hidden,false);assert.equal(e.get('#refOpacityValue').textContent,'40%');
+  await e.click('#prevBtn');assert.equal(e.get('.reference-panel').hidden,false);assert.equal(e.get('#refOpacityValue').textContent,'65%');
+  await e.click('#removeRefBtn');assert.equal(e.get('.reference-panel').hidden,true);
+  assert.deepEqual(commands((await e.download()).font,'0'),before);assert.deepEqual(e.errors,[]);
+});

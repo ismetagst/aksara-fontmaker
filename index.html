@@ -237,6 +237,18 @@
   @media(max-width:760px){.app.is-focused{padding-top:8px}.canvas-chrome .char-nav .icon-btn{width:24px}.rail-brand img{width:30px;height:30px}.canvas-chrome .current-char{font-size:22px}}
   .app.is-focused .rail-header #focusToggleBtn{height:36px}
   .app.is-focused #focusToggleIcon{position:absolute;right:-3px;bottom:-1px;width:11px;height:11px;padding:2px;box-sizing:content-box;border:1px solid #ded7f5;border-radius:4px;background:#fff;color:var(--accent)}
+  /* Workspace dimensions affect only the view; glyph coordinates stay in font units. */
+  .canvas-viewport{aspect-ratio:auto;height:clamp(280px,calc(100vh - var(--workspace-offset,240px)),960px);height:clamp(280px,calc(100dvh - var(--workspace-offset,240px)),960px);max-height:none}
+  .canvas-note{min-height:0;padding:7px 12px;margin:0;font-size:10px;line-height:1.5}
+  .inspector [hidden]{display:none!important}
+  .charpanel .panel-heading{flex-wrap:wrap}.char-heading{display:flex;align-items:center;gap:8px;min-width:0}.char-toggle{width:32px;height:32px;border:1px solid var(--line);flex-shrink:0}.char-toggle svg{width:15px;height:15px}
+  .layout.chars-collapsed{grid-template-columns:52px minmax(0,1fr)}
+  .chars-collapsed .charpanel{padding:10px 9px}.chars-collapsed .panel-heading{margin:0;justify-content:center}.chars-collapsed .char-heading h2,.chars-collapsed #progressLabel{display:none}
+  #charPanelContent[hidden]{display:none}
+  .chars-collapsed .char-toggle svg{transform:rotate(180deg)}
+  .canvas-chrome .char-nav .icon-btn{width:32px;height:32px}
+  @media(pointer:coarse){.canvas-chrome .char-nav .icon-btn,.char-toggle{min-width:40px;min-height:40px}}
+  @media(max-width:760px){.layout.chars-collapsed{grid-template-columns:minmax(0,1fr)}.chars-collapsed .charpanel{padding:8px 12px}.chars-collapsed .panel-heading{justify-content:flex-start}.chars-collapsed .char-heading h2,.chars-collapsed #progressLabel{display:block}.chars-collapsed .panel-heading{justify-content:space-between}}
 </style>
 </head>
 <body>
@@ -271,8 +283,8 @@
   <div class="layout">
 
     <aside class="charpanel">
-      <div class="panel-heading"><h2>Character set</h2><span class="progress" id="progressLabel">0/62 drawn</span></div>
-      <div id="charGroups"></div><p class="glyph-legend"><i></i> Completed character</p>
+      <div class="panel-heading"><div class="char-heading"><button type="button" class="icon-btn char-toggle" id="charPanelToggle" aria-controls="charPanelContent" aria-expanded="true" aria-label="Collapse Character set" title="Collapse Character set"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5l-5 5 5 5"/></svg></button><h2>Character set</h2></div><span class="progress" id="progressLabel">0/62 drawn</span></div>
+      <div id="charPanelContent"><div id="charGroups"></div><p class="glyph-legend"><i></i> Completed character</p></div>
     </aside>
 
     <section class="editorpanel" aria-label="Glyph editor">
@@ -326,7 +338,7 @@
         <canvas id="inkCanvas" aria-label="Glyph drawing canvas"></canvas>
       </div></div></div></div>
       <div class="canvas-bottom"><div class="canvas-zoom" role="group" aria-label="Canvas zoom"><button type="button" id="zoomOutBtn" aria-label="Zoom out" title="Zoom out (−)">−</button><output id="canvasZoomLabel" aria-live="polite" aria-label="Canvas zoom level">100%</output><button type="button" id="zoomInBtn" aria-label="Zoom in" title="Zoom in (+)">+</button><button type="button" id="fitCanvasBtn" class="fit-view" title="Fit artboard (0)">Fit</button></div><div class="canvas-legend"><span><i></i> Cap / x-height</span><span><i class="baseline-key"></i> Baseline</span></div><span class="canvas-units" id="canvasWidthLabel">560 advance · 1000 units / em</span></div>
-      <p class="canvas-note" id="canvasNote">V move · A anchors · P pen · B draw · +/− zoom · 0 fit · Space + drag to pan</p>
+      <p class="canvas-note" id="canvasNote">Select a shape to move or resize · Space + drag to pan</p>
       </div><div class="inspector"><section class="glyph-settings" aria-label="Glyph settings"><h3>Glyph settings</h3><div class="tool-group width-group">
           <label for="widthInput" class="tool-label">ADVANCE WIDTH</label>
           <input type="number" id="widthInput" title="Horizontal advance to the next character, in font units. This is not a cropping boundary." min="150" max="900" step="10">
@@ -992,7 +1004,13 @@
     document.getElementById('panToggle').setAttribute('aria-pressed', String(canvasPanActive));
     canvasViewport.classList.toggle('is-panning', canvasPanActive || spaceDown);
   }
+  function updateWorkspaceHeight(){
+    var top = canvasViewport.getBoundingClientRect().top + window.scrollY;
+    var bottom = document.querySelector('.canvas-bottom').offsetHeight + canvasNote.offsetHeight + 26;
+    canvasViewport.style.setProperty('--workspace-offset', Math.max(0,top + bottom) + 'px');
+  }
   function layoutCanvasView(zoom, fit){
+    updateWorkspaceHeight();
     var oldRect = canvasWrap.getBoundingClientRect(), viewportRect = canvasViewport.getBoundingClientRect();
     var centerX = viewportRect.left + canvasViewport.clientWidth / 2;
     var centerY = viewportRect.top + canvasViewport.clientHeight / 2;
@@ -1017,6 +1035,7 @@
   }
   function updateCanvasFit(){
     if (canvasInteractionActive()) return;
+    updateWorkspaceHeight();
     var padding = parseFloat(getComputedStyle(canvasStage).paddingLeft) || 0;
     var size = canvasFitDimension(canvasViewport.clientWidth, canvasViewport.clientHeight, padding);
     if (Math.abs(size - canvasFitSize) > .5) layoutCanvasView(canvasZoom, canvasZoom === 1);
@@ -1073,6 +1092,19 @@
     return true;
   }
   makeActionable(focusToggleBtn,function(){ setFocusMode(!focusMode); });
+
+  makeActionable(document.getElementById('charPanelToggle'),function(){
+    if (canvasInteractionActive()) return;
+    var layout=document.querySelector('.layout');
+    var collapsed=layout.classList.toggle('chars-collapsed');
+    document.getElementById('charPanelContent').hidden=collapsed;
+    var button=document.getElementById('charPanelToggle');
+    button.setAttribute('aria-expanded',String(!collapsed));
+    button.setAttribute('aria-label',(collapsed ? 'Show':'Collapse')+' Character set');
+    button.title=button.getAttribute('aria-label');
+    layoutCanvasView(canvasZoom,canvasZoom === 1);
+    button.focus({preventScroll:true});
+  });
 
   // ===================== Canvas setup =====================
   function setupCanvasResolution(canvas){
@@ -1463,6 +1495,7 @@
   }
   function refreshAnchorPanel(){
     var a=activeAnchor();
+    document.querySelector('.anchor-panel').hidden = !a;
     document.getElementById('anchorControls').hidden = !a;
     document.getElementById('anchorEmpty').hidden = !!a;
     document.getElementById('anchorTitle').textContent = a ? 'Anchor ' + (selectedAnchorIndex+1) : 'Anchor controls';
@@ -2023,6 +2056,8 @@
     canvasPanActive=false; refreshCanvasViewControls();
     var prevMode = currentMode;
     currentMode = mode;
+    DEFAULT_NOTE = mode === 'pen' ? 'Click to place · drag for curves · click first anchor to close' : mode === 'freehand' ? 'Drag to draw · choose stroke weight in Glyph settings' : mode === 'select' ? 'Select a shape, then an anchor · Alt separates handles · Shift constrains' : 'Select a shape to move or resize · Space + drag to pan';
+    if (!selectedObject) canvasNote.textContent=DEFAULT_NOTE;
     modeGroup.querySelectorAll('.icon-btn').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === mode); });
     weightGroup.style.display = mode === 'freehand' ? '' : 'none';
     penActionsGroup.style.display = mode === 'pen' ? '' : 'none';
@@ -2141,6 +2176,7 @@
 
   function refreshRefUIForChar(){
     var ref = glyphs[activeChar].ref;
+    document.querySelector('.reference-panel').hidden=!refImage.img;
     if (refImage.img){
       refControls.style.display = '';
       toggleRefBtn.innerHTML = ref.active ? EYE_OFF_ICON : EYE_ICON;

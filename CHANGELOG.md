@@ -4,6 +4,14 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Adaptive workspace
+
+- Use available window height for the viewport while preserving the square font artboard and font-space coordinates.
+- Add independent Character set collapse, protected during active canvas gestures; keep artboard navigation accessible.
+- Show Anchor properties only for a selected anchor and Reference settings when an image is loaded; preserve shared-image/per-glyph settings behavior.
+- Compact tool-specific hints and enlarge character navigation targets, including coarse-pointer sizing.
+- Add regression coverage for layout controls, unfinished paths, history/export preservation, reference settings, and scroll-stable height calculations.
+
 ### Focus mode
 
 - Added manual header collapse with a compact A-logo restore button and export icon in the tool rail; remembered the view preference when local storage is available.

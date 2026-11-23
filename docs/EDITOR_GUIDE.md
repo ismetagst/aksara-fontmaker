@@ -155,3 +155,11 @@ Run `npm --prefix tests ci`, then `npm --prefix tests test` from the repository 
 Manual browser checks should also cover drawing and dragging at multiple zoom levels, pan without marks, Fit, responsive layout, Grid/Guides toggles, reference upload, live preview, and installation of an exported font. See the [canvas review](CANVAS_REVIEW.md) for decisions and verification limits. Passing geometry tests alone does not verify those browser flows.
 
 Current limits include the 62-character set, browser-memory storage, and the external font-building dependency. There are no account, autosave, payment, or credit gates in the standalone editor.
+
+## Workspace efficiency
+
+The workspace uses the available window height while keeping the font artboard square. Fit and zoom continue to use the smaller available dimension; resizing changes only the view. On short screens the workspace keeps a 280 px minimum and the page can scroll.
+
+Use the chevron beside Character set to collapse or restore the character grid. Previous/next character controls remain above the artboard. Collapse is independent of Focus mode and resets on reload. Both layout controls are blocked during active canvas gestures; an unfinished path survives collapse between gestures.
+
+Glyph width and Layers remain available. Weight appears with Draw, Anchor properties appear when an anchor is selected, and Reference settings appear once an image is loaded. The reference image remains shared across glyphs, with visibility, placement, lock and opacity stored per glyph. Hidden reference images can still be enabled through their controls. Tool hints below the canvas are shorter and follow the current tool or selection; the Keyboard shortcuts disclosure contains the full reference.
