@@ -4,6 +4,12 @@ Changes listed here describe the standalone editor. Planned commerce functionali
 
 ## Unreleased
 
+### Homepage and editor entry
+
+- Add a simple public homepage with original product copy, a letterform illustration, workflow overview, and direct editor calls to action.
+- Move the existing editor to `/editor/` without changing its drawing script. No login or account gate is added.
+- Add an editor footer Home link and update canonical URLs, sitemap, docs, and test entry paths.
+
 ### Adaptive workspace
 
 - Use available window height for the viewport while preserving the square font artboard and font-space coordinates.

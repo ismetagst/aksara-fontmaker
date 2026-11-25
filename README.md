@@ -48,7 +48,7 @@ Live editor: [aksarafontmaker.netlify.app](https://aksarafontmaker.netlify.app/)
 
 ## Quick Start
 
-The editor lives in `index.html`. It has no build step or package installation. Font export and live preview use opentype.js, loaded from cdnjs, so an internet connection is required to load that library.
+The editor lives in `editor/index.html`. It has no build step or package installation. Font export and live preview use opentype.js, loaded from cdnjs, so an internet connection is required to load that library.
 
 ```bash
 git clone https://github.com/ismetagst/aksara-fontmaker.git
@@ -56,7 +56,7 @@ cd aksara-fontmaker
 python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
-Open [http://localhost:4173](http://localhost:4173). You can also open `index.html` directly in a modern browser.
+Open [http://localhost:4173](http://localhost:4173). Choose Open editor to enter the workspace at `/editor/`. Serve the site over HTTP so root-relative assets load correctly.
 
 Choose a character, draw with **P** or **B**, test it in **Type tester**, name your font, and select **Download Font (.otf)**. At least one character must be drawn. Undrawn characters export as blanks.
 
@@ -131,7 +131,8 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full system overview, and the
 
 ```text
 aksara-fontmaker/
-├── index.html                 # Standalone editor, styles, and drawing logic
+├── index.html                 # Public homepage
+├── editor/index.html          # Standalone editor, styles, and drawing logic
 ├── README.md
 ├── ARCHITECTURE.md
 ├── CHANGELOG.md
@@ -185,3 +186,5 @@ Font rendering powered by [opentype.js](https://github.com/opentypejs/opentype.j
 ## License
 
 MIT — see [`LICENSE`](./LICENSE)
+
+The homepage is served at `/`, with direct, account-free access to the existing editor at `/editor/`. The editor footer links back Home; leaving or reloading the editor still discards in-memory work.

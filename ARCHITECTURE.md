@@ -2,7 +2,7 @@
 
 ## Overview
 
-The current implementation is a standalone browser editor in `index.html`, with inline HTML/CSS/JavaScript and no build step. It uses opentype.js from cdnjs for live font preview and export. Glyphs, reference settings, and history live in browser memory; there is no persistence or server API in this checkout.
+The current implementation is a standalone browser editor in `editor/index.html`, with inline HTML/CSS/JavaScript and no build step. It uses opentype.js from cdnjs for live font preview and export. Glyphs, reference settings, and history live in browser memory; there is no persistence or server API in this checkout.
 
 The planned commercial product uses Next.js backed by Supabase (PostgreSQL + Auth + Storage), with a credit-based payment layer integrated via Midtrans or Xendit. The commerce map, application layers, and security model below describe that target architecture.
 
@@ -63,7 +63,7 @@ See [docs/EDITOR_GUIDE.md](docs/EDITOR_GUIDE.md) for the user workflow.
 
 ## Application Layers
 
-### 1. Drawing Engine (current: `index.html`)
+### 1. Drawing Engine (current: `editor/index.html`)
 
 Buildless HTML/JS/CSS with opentype.js loaded externally. Planned migration into a Next.js route at `/editor/[projectId]`:
 - Glyph data serialized to JSON and saved to Supabase on change (debounced, ~2s)

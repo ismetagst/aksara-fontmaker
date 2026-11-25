@@ -1,6 +1,6 @@
 # Editor testing
 
-The production editor is still `index.html`; it needs no build command or npm installation. All test dependencies live inside `tests/`, so they do not change root-level static-site framework detection.
+The production editor is in `editor/index.html`; it needs no build command or npm installation. All test dependencies live inside `tests/`, so they do not change root-level static-site framework detection.
 
 ## Run the complete suite
 

@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { JSDOM, VirtualConsole } = require('jsdom');
 const { createCanvas, Image, GlobalFonts } = require('@napi-rs/canvas');
 const opentype = require('opentype.js');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', '..', 'editor', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 function createEditor({ viewportSize = 600, focusPreference, storageUnavailable = false } = {}) {

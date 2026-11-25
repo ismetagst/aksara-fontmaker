@@ -4,7 +4,7 @@ The current public origin is **https://aksarafontmaker.netlify.app/**. The Netli
 
 ## Included files
 
-- `index.html`: descriptive title, meta description, canonical URL, robots directive, theme color, Open Graph and Twitter summary metadata, and JSON-LD for the website, web application, and Resenarasi creator.
+- `index.html` (homepage) and `editor/index.html` (editor): descriptive title, meta description, canonical URL, robots directive, theme color, Open Graph and Twitter summary metadata, and JSON-LD for the website, web application, and Resenarasi creator.
 - `assets/favicon.svg`: editable violet A monogram for modern browsers.
 - `favicon.ico`: PNG-backed 32, 48, and 96 px entries for browser compatibility.
 - `assets/favicon-48.png`: explicit square PNG favicon for search engines.
@@ -27,7 +27,7 @@ SEO metadata makes the page easier to identify and crawl; it does not guarantee 
 
 ## Moving to a custom domain
 
-Update the origin consistently in `index.html` (canonical, Open Graph URL/image, Twitter image, and JSON-LD identifiers/URLs), `robots.txt`, and `sitemap.xml`. Configure Netlify to redirect the previous host to the new primary domain, then verify and submit the new property in Search Console. Keep asset URLs stable.
+Update the origin consistently in `index.html` and `editor/index.html` (canonical, Open Graph URL/image, Twitter image, and JSON-LD identifiers/URLs), `robots.txt`, and `sitemap.xml`. Configure Netlify to redirect the previous host to the new primary domain, then verify and submit the new property in Search Console. Keep asset URLs stable.
 
 ## Sources
 
